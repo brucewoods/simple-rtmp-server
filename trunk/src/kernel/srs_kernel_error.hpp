@@ -185,6 +185,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define ERROR_EDGE_VHOST_REMOVED            3039
 #define ERROR_HLS_AVC_TRY_OTHERS            3040
 #define ERROR_H264_API_NO_PREFIXED          3041
+#define ERROR_FLV_INVALID_VIDEO_TAG         3042
+#define ERROR_H264_DROP_BEFORE_SPS_PPS      3043
+#define ERROR_H264_DUPLICATED_SPS           3044
+#define ERROR_H264_DUPLICATED_PPS           3045
 
 /**
 * whether the error code is an system control error.

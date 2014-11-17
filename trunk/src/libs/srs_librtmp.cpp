@@ -72,15 +72,25 @@ struct Context
     
     // for h264 raw stream, 
     // see: https://github.com/winlinvip/simple-rtmp-server/issues/66#issuecomment-62240521
-    SrsStream raw_stream;
+    SrsStream h264_raw_stream;
     // about SPS, @see: 7.3.2.1.1, H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 62
     std::string h264_sps;
     std::string h264_pps;
+    // whether the sps and pps sent,
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/203
+    bool h264_sps_pps_sent;
+    // only send the ssp and pps when both changed.
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/204
+    bool h264_sps_changed;
+    bool h264_pps_changed;
     
     Context() {
         rtmp = NULL;
         skt = NULL;
         stream_id = 0;
+        h264_sps_pps_sent = false;
+        h264_sps_changed = false;
+        h264_pps_changed = false;
     }
     virtual ~Context() {
         srs_freep(rtmp);
@@ -337,7 +347,7 @@ int srs_publish_stream(srs_rtmp_t rtmp)
     return ret;
 }
 
-const char* srs_type2string(int type)
+const char* srs_type2string(char type)
 {
     static const char* audio = "Audio";
     static const char* video = "Video";
@@ -390,7 +400,7 @@ int srs_bandwidth_check(srs_rtmp_t rtmp,
     return ret;
 }
 
-int srs_read_packet(srs_rtmp_t rtmp, int* type, u_int32_t* timestamp, char** data, int* size)
+int srs_read_packet(srs_rtmp_t rtmp, char* type, u_int32_t* timestamp, char** data, int* size)
 {
     *type = 0;
     *timestamp = 0;
@@ -445,7 +455,7 @@ int srs_read_packet(srs_rtmp_t rtmp, int* type, u_int32_t* timestamp, char** dat
     return ret;
 }
 
-int srs_write_packet(srs_rtmp_t rtmp, int type, u_int32_t timestamp, char* data, int size)
+int srs_write_packet(srs_rtmp_t rtmp, char type, u_int32_t timestamp, char* data, int size)
 {
     int ret = ERROR_SUCCESS;
     
@@ -529,6 +539,47 @@ int64_t srs_get_nrecv_bytes(srs_rtmp_t rtmp)
     srs_assert(rtmp != NULL);
     Context* context = (Context*)rtmp;
     return context->rtmp->get_recv_bytes();
+}
+
+int srs_parse_timestamp(
+    u_int32_t time, char type, char* data, int size,
+    u_int32_t* ppts
+) {
+    int ret = ERROR_SUCCESS;
+    
+    if (type != SRS_RTMP_TYPE_VIDEO) {
+        *ppts = time;
+        return ret;
+    }
+
+    if (!SrsFlvCodec::video_is_h264(data, size)) {
+        return ERROR_FLV_INVALID_VIDEO_TAG;
+    }
+
+    if (SrsFlvCodec::video_is_sequence_header(data, size)) {
+        *ppts = time;
+        return ret;
+    }
+    
+    // 1bytes, frame type and codec id.
+    // 1bytes, avc packet type.
+    // 3bytes, cts, composition time,
+    //      pts = dts + cts, or 
+    //      cts = pts - dts.
+    if (size < 5) {
+        return ERROR_FLV_INVALID_VIDEO_TAG;
+    }
+    
+    u_int32_t cts = 0;
+    char* p = data + 2;
+    char* pp = (char*)&cts;
+    pp[2] = *p++;
+    pp[1] = *p++;
+    pp[0] = *p++;
+
+    *ppts = time + cts;
+    
+    return ret;
 }
 
 const char* srs_format_time()
@@ -726,17 +777,17 @@ void srs_flv_lseek(srs_flv_t flv, int64_t offset)
     context->reader.lseek(offset);
 }
 
-flv_bool srs_flv_is_eof(int error_code)
+srs_flv_bool srs_flv_is_eof(int error_code)
 {
     return error_code == ERROR_SYSTEM_FILE_EOF;
 }
 
-flv_bool srs_flv_is_sequence_header(char* data, int32_t size)
+srs_flv_bool srs_flv_is_sequence_header(char* data, int32_t size)
 {
     return SrsFlvCodec::video_is_sequence_header(data, (int)size);
 }
 
-flv_bool srs_flv_is_keyframe(char* data, int32_t size)
+srs_flv_bool srs_flv_is_keyframe(char* data, int32_t size)
 {
     return SrsFlvCodec::video_is_keyframe(data, (int)size);
 }
@@ -1034,6 +1085,7 @@ char* srs_amf0_human_print(srs_amf0_t amf0, char** pdata, int* psize)
 * write h264 packet, with rtmp header.
 * @param frame_type, SrsCodecVideoAVCFrameKeyFrame or SrsCodecVideoAVCFrameInterFrame.
 * @param avc_packet_type, SrsCodecVideoAVCTypeSequenceHeader or SrsCodecVideoAVCTypeNALU.
+* @param h264_raw_data the h.264 raw data, user must free it.
 */
 int __srs_write_h264_packet(Context* context, 
     int8_t frame_type, int8_t avc_packet_type, 
@@ -1081,8 +1133,8 @@ int __srs_write_h264_sps_pps(Context* context, u_int32_t dts, u_int32_t pts)
 {
     int ret = ERROR_SUCCESS;
     
-    // when pps or sps not ready, ignore.
-    if (context->h264_pps.empty() || context->h264_sps.empty()) {
+    // only send when both sps and pps changed.
+    if (!context->h264_sps_changed || !context->h264_pps_changed) {
         return ret;
     }
     
@@ -1101,6 +1153,7 @@ int __srs_write_h264_sps_pps(Context* context, u_int32_t dts, u_int32_t pts)
         + 3 + (int)context->h264_sps.length() 
         + 3 + (int)context->h264_pps.length();
     char* packet = new char[nb_packet];
+    SrsAutoFree(char, packet);
     
     // use stream to generate the h264 packet.
     SrsStream stream;
@@ -1116,7 +1169,7 @@ int __srs_write_h264_sps_pps(Context* context, u_int32_t dts, u_int32_t pts)
     
         // @see: Annex A Profiles and levels, H.264-AVC-ISO_IEC_14496-10.pdf, page 205
         //      Baseline profile profile_idc is 66(0x42).
-        //      Baseline profile profile_idc is 77(0x4d).
+        //      Main profile profile_idc is 77(0x4d).
         //      Extended profile profile_idc is 88(0x58).
         u_int8_t profile_idc = frame[1];
         //u_int8_t constraint_set = frame[2];
@@ -1160,8 +1213,9 @@ int __srs_write_h264_sps_pps(Context* context, u_int32_t dts, u_int32_t pts)
     }
     
     // reset sps and pps.
-    context->h264_pps = "";
-    context->h264_sps = "";
+    context->h264_sps_changed = false;
+    context->h264_pps_changed = false;
+    context->h264_sps_pps_sent = true;
     
     // TODO: FIXME: for more profile.
     // 5.3.4.2.1 Syntax, H.264-AVC-ISO_IEC_14496-15.pdf, page 16
@@ -1184,6 +1238,12 @@ int __srs_write_h264_ipb_frame(Context* context,
 ) {
     int ret = ERROR_SUCCESS;
     
+    // when sps or pps not sent, ignore the packet.
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/203
+    if (!context->h264_sps_pps_sent) {
+        return ERROR_H264_DROP_BEFORE_SPS_PPS;
+    }
+    
     // 5bits, 7.3.1 NAL unit syntax, 
     // H.264-AVC-ISO_IEC_14496-10.pdf, page 44.
     //  7: SPS, 8: PPS, 5: I Frame, 1: P Frame
@@ -1195,6 +1255,7 @@ int __srs_write_h264_ipb_frame(Context* context,
     //      NALUnit
     int nb_packet = 4 + size;
     char* packet = new char[nb_packet];
+    SrsAutoFree(char, packet);
     
     // use stream to generate the h264 packet.
     SrsStream stream;
@@ -1252,13 +1313,26 @@ int __srs_write_h264_raw_frame(Context* context,
             return ret;
         }
         
-        context->h264_sps = "";
-        context->h264_sps.append(frame, frame_size);
+        std::string sps;
+        sps.append(frame, frame_size);
+        
+        if (context->h264_sps == sps) {
+            return ERROR_H264_DUPLICATED_SPS;
+        }
+        context->h264_sps_changed = true;
+        context->h264_sps = sps;
         
         return __srs_write_h264_sps_pps(context, dts, pts);
     } else if (nal_unit_type == 8) {
-        context->h264_pps = "";
-        context->h264_pps.append(frame, frame_size);
+        
+        std::string pps;
+        pps.append(frame, frame_size);
+        
+        if (context->h264_pps == pps) {
+            return ERROR_H264_DUPLICATED_PPS;
+        }
+        context->h264_pps_changed = true;
+        context->h264_pps = pps;
         
         return __srs_write_h264_sps_pps(context, dts, pts);
     } else {
@@ -1271,7 +1345,7 @@ int __srs_write_h264_raw_frame(Context* context,
 /**
 * write h264 multiple frames, in annexb format.
 */
-int srs_write_h264_raw_frames(srs_rtmp_t rtmp, 
+int srs_h264_write_raw_frames(srs_rtmp_t rtmp, 
     char* frames, int frames_size, u_int32_t dts, u_int32_t pts
 ) {
     int ret = ERROR_SUCCESS;
@@ -1282,38 +1356,70 @@ int srs_write_h264_raw_frames(srs_rtmp_t rtmp,
     srs_assert(rtmp != NULL);
     Context* context = (Context*)rtmp;
     
-    if ((ret = context->raw_stream.initialize(frames, frames_size)) != ERROR_SUCCESS) {
+    if ((ret = context->h264_raw_stream.initialize(frames, frames_size)) != ERROR_SUCCESS) {
         return ret;
     }
     
+    // use the last error
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/203
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/204
+    int error_code_return = ret;
+    
     // send each frame.
-    while (!context->raw_stream.empty()) {
+    while (!context->h264_raw_stream.empty()) {
         // each frame must prefixed by annexb format.
         // about annexb, @see H.264-AVC-ISO_IEC_14496-10.pdf, page 211.
         int pnb_start_code = 0;
-        if (!srs_avc_startswith_annexb(&context->raw_stream, &pnb_start_code)) {
+        if (!srs_avc_startswith_annexb(&context->h264_raw_stream, &pnb_start_code)) {
             return ERROR_H264_API_NO_PREFIXED;
         }
-        int start = context->raw_stream.pos() + pnb_start_code;
+        int start = context->h264_raw_stream.pos() + pnb_start_code;
         
         // find the last frame prefixed by annexb format.
-        context->raw_stream.skip(pnb_start_code);
-        while (!context->raw_stream.empty()) {
-            if (srs_avc_startswith_annexb(&context->raw_stream, NULL)) {
+        context->h264_raw_stream.skip(pnb_start_code);
+        while (!context->h264_raw_stream.empty()) {
+            if (srs_avc_startswith_annexb(&context->h264_raw_stream, NULL)) {
                 break;
             }
-            context->raw_stream.skip(1);
+            context->h264_raw_stream.skip(1);
         }
-        int size = context->raw_stream.pos() - start;
+        int size = context->h264_raw_stream.pos() - start;
         
         // send out the frame.
-        char* frame = context->raw_stream.data() + start;
+        char* frame = context->h264_raw_stream.data() + start;
+
+        // it may be return error, but we must process all packets.
         if ((ret = __srs_write_h264_raw_frame(context, frame, size, dts, pts)) != ERROR_SUCCESS) {
+            error_code_return = ret;
+            
+            // ignore known error, process all packets.
+            if (srs_h264_is_dvbsp_error(ret)
+                || srs_h264_is_duplicated_sps_error(ret)
+                || srs_h264_is_duplicated_pps_error(ret)
+            ) {
+                continue;
+            }
+            
             return ret;
         }
     }
     
-    return ret;
+    return error_code_return;
+}
+
+srs_h264_bool srs_h264_is_dvbsp_error(int error_code)
+{
+    return error_code == ERROR_H264_DROP_BEFORE_SPS_PPS;
+}
+
+srs_h264_bool srs_h264_is_duplicated_sps_error(int error_code)
+{
+    return error_code == ERROR_H264_DUPLICATED_SPS;
+}
+
+srs_h264_bool srs_h264_is_duplicated_pps_error(int error_code)
+{
+    return error_code == ERROR_H264_DUPLICATED_PPS;
 }
 
 int srs_h264_startswith_annexb(char* h264_raw_data, int h264_raw_size, int* pnb_start_code)

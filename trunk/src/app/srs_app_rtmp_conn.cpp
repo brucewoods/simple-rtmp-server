@@ -513,13 +513,18 @@ int SrsRtmpConn::playing(SrsSource* source)
     SrsAutoFree(SrsConsumer, consumer);
     srs_verbose("consumer created success.");
     
-    rtmp->set_recv_timeout(SRS_CONSTS_RTMP_PULSE_TIMEOUT_US);
-    
     // initialize other components
     SrsPithyPrint pithy_print(SRS_CONSTS_STAGE_PLAY_USER);
-    SrsSharedPtrMessageArray msgs(SYS_CONSTS_MAX_PLAY_SEND_MSGS);
+    SrsMessageArray msgs(SYS_CONSTS_MAX_PLAY_SEND_MSGS);
     bool user_specified_duration_to_stop = (req->duration > 0);
     int64_t starttime = -1;
+    
+    // TODO: use isolate thread to recv, 
+    // @see: https://github.com/winlinvip/simple-rtmp-server/issues/196
+    // the performance bottleneck not in the timeout recv, but 
+    // in the multiple messages send, so it's ok for timeout recv,
+    // @see https://github.com/winlinvip/simple-rtmp-server/issues/194
+    rtmp->set_recv_timeout(SRS_CONSTS_RTMP_PULSE_TIMEOUT_US);
     
     while (true) {
         // TODO: to use isolate thread to recv, can improve about 5% performance.
@@ -554,7 +559,7 @@ int SrsRtmpConn::playing(SrsSource* source)
         
         // get messages from consumer.
         int count = 0;
-        if ((ret = consumer->dump_packets(msgs.size, msgs.msgs, count)) != ERROR_SUCCESS) {
+        if ((ret = consumer->dump_packets(msgs.max, msgs.msgs, count)) != ERROR_SUCCESS) {
             srs_error("get messages from consumer failed. ret=%d", ret);
             return ret;
         }
@@ -574,7 +579,7 @@ int SrsRtmpConn::playing(SrsSource* source)
         // we start to collect the durations for each message.
         if (user_specified_duration_to_stop) {
             for (int i = 0; i < count; i++) {
-                SrsSharedPtrMessage* msg = msgs.msgs[i];
+                SrsMessage* msg = msgs.msgs[i];
                 
                 // foreach msg, collect the duration.
                 // @remark: never use msg when sent it, for the protocol sdk will free it.
@@ -591,16 +596,10 @@ int SrsRtmpConn::playing(SrsSource* source)
         //      free by send_and_free_message or srs_freep.
         if (count > 0) {
             // no need to assert msg, for the rtmp will assert it.
-            ret = rtmp->send_and_free_messages(msgs.msgs, count, res->stream_id);
-        }
-        for (int i = 0; i < count; i++) {
-            // the send_message will free the msg, 
-            // so set the msgs[i] to NULL.
-            msgs.msgs[i] = NULL;
-        }
-        if (ret != ERROR_SUCCESS) {
-            srs_error("send messages to client failed. ret=%d", ret);
-            return ret;
+            if ((ret = rtmp->send_and_free_messages(msgs.msgs, count, res->stream_id)) != ERROR_SUCCESS) {
+                srs_error("send messages to client failed. ret=%d", ret);
+                return ret;
+            }
         }
         
         // if duration specified, and exceed it, stop play live.

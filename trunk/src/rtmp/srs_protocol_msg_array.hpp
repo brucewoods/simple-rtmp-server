@@ -30,16 +30,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <srs_core.hpp>
 
-class SrsSharedPtrMessage;
+class SrsMessage;
 
 /**
 * the class to auto free the shared ptr message array.
 * when need to get some messages, for instance, from Consumer queue,
 * create a message array, whose msgs can used to accept the msgs,
 * then send each message and set to NULL.
-* @remark: when error, the message array will free the msg not sent out.
+*
+* @remark: user must free all msgs in array, for the SRS2.0 protocol stack
+*       provides an api to send messages, @see send_and_free_messages
 */
-class SrsSharedPtrMessageArray
+class SrsMessageArray
 {
 public:
     /**
@@ -47,17 +49,17 @@ public:
     * for instance, msg= msgs.msgs[i], msgs.msgs[i]=NULL, send(msg),
     * where send(msg) will always send and free it.
     */
-    SrsSharedPtrMessage** msgs;
-    int size;
+    SrsMessage** msgs;
+    int max;
 public:
     /**
     * create msg array, initialize array to NULL ptrs.
     */
-    SrsSharedPtrMessageArray(int _size);
+    SrsMessageArray(int max_msgs);
     /**
     * free the msgs not sent out(not NULL).
     */
-    virtual ~SrsSharedPtrMessageArray();
+    virtual ~SrsMessageArray();
 };
 
 #endif
