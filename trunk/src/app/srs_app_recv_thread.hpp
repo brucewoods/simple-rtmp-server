@@ -21,29 +21,49 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <srs_protocol_msg_array.hpp>
+#ifndef SRS_APP_RECV_THREAD_HPP
+#define SRS_APP_RECV_THREAD_HPP
 
-#include <srs_protocol_stack.hpp>
+/*
+#include <srs_app_recv_thread.hpp>
+*/
 
-SrsMessageArray::SrsMessageArray(int max_msgs)
+#include <srs_core.hpp>
+
+#include <vector>
+
+#include <srs_app_thread.hpp>
+
+class SrsRtmpServer;
+class SrsMessage;
+
+/**
+* the recv thread used to replace the timeout recv,
+* which hurt performance for the epoll_ctrl is frequently used.
+* @see: SrsRtmpConn::playing
+* @see: https://github.com/winlinvip/simple-rtmp-server/issues/217
+*/
+class SrsRecvThread : public ISrsThreadHandler
 {
-    srs_assert(max_msgs > 0);
-    
-    msgs = new SrsMessage*[max_msgs];
-    max = max_msgs;
-    
-    // initialize
-    for (int i = 0; i < max_msgs; i++) {
-        msgs[i] = NULL;
-    }
-}
+private:
+    SrsThread* trd;
+    SrsRtmpServer* rtmp;
+    std::vector<SrsMessage*> queue;
+public:
+    SrsRecvThread(SrsRtmpServer* rtmp_sdk);
+    virtual ~SrsRecvThread();
+public:
+    virtual bool empty();
+    virtual int size();
+    virtual SrsMessage* pump();
+public:
+    virtual int start();
+    virtual void stop();
+    virtual int cycle();
+public:
+    virtual void on_thread_start();
+    virtual void on_thread_stop();
+};
 
-SrsMessageArray::~SrsMessageArray()
-{
-    // we just free the msgs itself,
-    // both delete and delete[] is ok,
-    // for each msg in msgs is already freed by send_and_free_messages.
-    srs_freep(msgs);
-}
-
+#endif
 

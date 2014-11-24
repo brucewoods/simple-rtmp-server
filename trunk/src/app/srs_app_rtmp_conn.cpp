@@ -48,6 +48,7 @@ using namespace std;
 #include <srs_app_utility.hpp>
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
+#include <srs_app_recv_thread.hpp>
 
 // when stream is busy, for example, streaming is already
 // publishing, when a new client to request to publish,
@@ -497,6 +498,34 @@ int SrsRtmpConn::playing(SrsSource* source)
 {
     int ret = ERROR_SUCCESS;
     
+    // use isolate thread to recv, 
+    // @see: https://github.com/winlinvip/simple-rtmp-server/issues/217
+    SrsRecvThread trd(rtmp);
+    
+    // start isolate recv thread.
+    if ((ret = trd.start()) != ERROR_SUCCESS) {
+        srs_error("start isolate recv thread failed. ret=%d", ret);
+        return ret;
+    }
+    
+    // delivery messages for clients playing stream.
+    ret = do_playing(source, &trd);
+    
+    // stop isolate recv thread
+    trd.stop();
+    
+    // warn for the message is dropped.
+    if (!trd.empty()) {
+        srs_warn("drop the received %d messages", trd.size());
+    }
+    
+    return ret;
+}
+
+int SrsRtmpConn::do_playing(SrsSource* source, SrsRecvThread* trd)
+{
+    int ret = ERROR_SUCCESS;
+    
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_play(req->vhost))) != ERROR_SUCCESS) {
         srs_error("check play_refer failed. ret=%d", ret);
         return ret;
@@ -519,38 +548,19 @@ int SrsRtmpConn::playing(SrsSource* source)
     bool user_specified_duration_to_stop = (req->duration > 0);
     int64_t starttime = -1;
     
-    // TODO: use isolate thread to recv, 
-    // @see: https://github.com/winlinvip/simple-rtmp-server/issues/196
-    // the performance bottleneck not in the timeout recv, but 
-    // in the multiple messages send, so it's ok for timeout recv,
-    // @see https://github.com/winlinvip/simple-rtmp-server/issues/194
-    rtmp->set_recv_timeout(SRS_CONSTS_RTMP_PULSE_TIMEOUT_US);
-    
     while (true) {
-        // TODO: to use isolate thread to recv, can improve about 5% performance.
+        // to use isolate thread to recv, can improve about 33% performance.
         // @see: https://github.com/winlinvip/simple-rtmp-server/issues/196
-        // read from client.
-        if (true) {
-            SrsMessage* msg = NULL;
-            ret = rtmp->recv_message(&msg);
-            srs_verbose("play loop recv message. ret=%d", ret);
+        // @see: https://github.com/winlinvip/simple-rtmp-server/issues/217
+        while (!trd->empty()) {
+            SrsMessage* msg = trd->pump();
+            srs_verbose("pump client message to process.");
             
-            if (ret == ERROR_SOCKET_TIMEOUT) {
-                // it's ok, do nothing.
-                ret = ERROR_SUCCESS;
-                srs_verbose("recv timeout, ignore. ret=%d", ret);
-            } else if (ret != ERROR_SUCCESS) {
-                if (!srs_is_client_gracefully_close(ret)) {
-                    srs_error("recv client control message failed. ret=%d", ret);
+            if ((ret = process_play_control_msg(consumer, msg)) != ERROR_SUCCESS) {
+                if (!srs_is_system_control_error(ret)) {
+                    srs_error("process play control message failed. ret=%d", ret);
                 }
                 return ret;
-            } else {
-                if ((ret = process_play_control_msg(consumer, msg)) != ERROR_SUCCESS) {
-                    if (!srs_is_system_control_error(ret)) {
-                        srs_error("process play control message failed. ret=%d", ret);
-                    }
-                    return ret;
-                }
             }
         }
         
@@ -558,10 +568,17 @@ int SrsRtmpConn::playing(SrsSource* source)
         pithy_print.elapse();
         
         // get messages from consumer.
+        // each msg in msgs.msgs must be free, for the SrsMessageArray never free them.
         int count = 0;
         if ((ret = consumer->dump_packets(msgs.max, msgs.msgs, count)) != ERROR_SUCCESS) {
             srs_error("get messages from consumer failed. ret=%d", ret);
             return ret;
+        }
+        
+        // no message to send, sleep a while.
+        if (count <= 0) {
+            srs_verbose("sleep for no messages to send");
+            st_usleep(SRS_CONSTS_RTMP_PULSE_TIMEOUT_US);
         }
 
         // reportable
@@ -591,13 +608,13 @@ int SrsRtmpConn::playing(SrsSource* source)
             }
         }
         
-        // sendout messages
-        // @remark, becareful, all msgs must be free explicitly,
-        //      free by send_and_free_message or srs_freep.
+        // sendout messages, all messages are freed by send_and_free_messages().
         if (count > 0) {
             // no need to assert msg, for the rtmp will assert it.
             if ((ret = rtmp->send_and_free_messages(msgs.msgs, count, res->stream_id)) != ERROR_SUCCESS) {
-                srs_error("send messages to client failed. ret=%d", ret);
+                if (!srs_is_client_gracefully_close(ret)) {
+                    srs_error("send messages to client failed. ret=%d", ret);
+                }
                 return ret;
             }
         }
@@ -935,12 +952,16 @@ int SrsRtmpConn::process_play_control_msg(SrsConsumer* consumer, SrsMessage* msg
     // TODO: FIXME: response in right way, or forward in edge mode.
     SrsCallPacket* call = dynamic_cast<SrsCallPacket*>(pkt);
     if (call) {
-        SrsCallResPacket* res = new SrsCallResPacket(call->transaction_id);
-        res->command_object = SrsAmf0Any::null();
-        res->response = SrsAmf0Any::null();
-        if ((ret = rtmp->send_and_free_packet(res, 0)) != ERROR_SUCCESS) {
-            srs_warn("response call failed. ret=%d", ret);
-            return ret;
+        // only response it when transaction id not zero,
+        // for the zero means donot need response.
+        if (call->transaction_id > 0) {
+            SrsCallResPacket* res = new SrsCallResPacket(call->transaction_id);
+            res->command_object = SrsAmf0Any::null();
+            res->response = SrsAmf0Any::null();
+            if ((ret = rtmp->send_and_free_packet(res, 0)) != ERROR_SUCCESS) {
+                srs_warn("response call failed. ret=%d", ret);
+                return ret;
+            }
         }
         return ret;
     }
