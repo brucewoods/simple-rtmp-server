@@ -793,7 +793,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 kbps->get_recv_kbps(), kbps->get_recv_kbps_30s(), kbps->get_recv_kbps_5m());
         }
     
-        // process UnPublish event.
+        // process UnPublish or pausePublish event.
         if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
             SrsPacket* pkt = NULL;
             if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
@@ -803,10 +803,22 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             
             SrsAutoFree(SrsPacket, pkt);
             
-            // flash unpublish.
-            // TODO: maybe need to support republish.
-            srs_trace("flash flash publish finished.");
-            return ERROR_CONTROL_REPUBLISH;
+            if (dynamic_cast<SrsTbPausePublishPacket*>(pkt)) {
+                SrsTbPausePublishPacket* pause_publish = dynamic_cast<SrsTbPausePublishPacket*>(pkt);
+                // TODO: do something with pause publish
+
+                continue;
+            } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
+                SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
+                // TODO: do something with resume publish
+
+                continue;
+            } else {
+                // flash unpublish.
+                // TODO: maybe need to support republish.
+                srs_trace("flash flash publish finished.");
+                return ERROR_CONTROL_REPUBLISH;
+            }
         }
 
         // video, audio, data message
