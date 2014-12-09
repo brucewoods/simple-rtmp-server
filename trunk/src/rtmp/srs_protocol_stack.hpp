@@ -900,6 +900,7 @@ public:
     double transaction_id;
     /**
     * Command information object does not exist. Set to null type.
+    * @remark, not an AMF0 null instance on tieba's implementation
     */
     SrsAmf0Any* command_object; // null
     /**
@@ -922,6 +923,76 @@ public:
 public:
     SrsPublishPacket();
     virtual ~SrsPublishPacket();
+// decode functions for concrete packet to override.
+public:
+    virtual int decode(SrsStream* stream);
+// encode functions for concrete packet to override.
+public:
+    virtual int get_prefer_cid();
+    virtual int get_message_type();
+protected:
+    virtual int get_size();
+    virtual int encode_packet(SrsStream* stream);
+};
+
+/**
+* tieba client publish pause
+* The tieba client sends the publish pause command to make a publish stream pause
+*/
+class SrsTbPausePublishPacket : public SrsPacket
+{
+public:
+    /**
+    * Name of the command, set to “pausePublish”.
+    */
+    std::string command_name;
+    /**
+    * Transaction ID set to 0.
+    */
+    double transaction_id;
+    /**
+    * Command information object does not exist. Set to null type.
+    * @remark, never be NULL, an AMF0 null instance.
+    */
+    SrsAmf0Any* command_object; // null
+public:
+    SrsTbPausePublishPacket();
+    virtual ~SrsTbPausePublishPacket();
+// decode functions for concrete packet to override.
+public:
+    virtual int decode(SrsStream* stream);
+// encode functions for concrete packet to override.
+public:
+    virtual int get_prefer_cid();
+    virtual int get_message_type();
+protected:
+    virtual int get_size();
+    virtual int encode_packet(SrsStream* stream);
+};
+
+/**
+* tieba client publish resume
+* The tieba client sends the publish pause command to make a publish stream pause
+*/
+class SrsTbResumePublishPacket : public SrsPacket
+{
+public:
+    /**
+    * Name of the command, set to “resumePublish”.
+    */
+    std::string command_name;
+    /**
+    * Transaction ID set to 0.
+    */
+    double transaction_id;
+    /**
+    * Command information object does not exist. Set to null type.
+    * @remark, never be NULL, an AMF0 null instance.
+    */
+    SrsAmf0Any* command_object; // null
+public:
+    SrsTbResumePublishPacket();
+    virtual ~SrsTbResumePublishPacket();
 // decode functions for concrete packet to override.
 public:
     virtual int decode(SrsStream* stream);

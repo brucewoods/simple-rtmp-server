@@ -201,6 +201,12 @@ messages.
 #define RTMP_AMF0_DATA_ON_METADATA              "onMetaData"
 
 /**
+* tieba client command message
+*/
+#define RTMP_AMF0_COMMAND_TB_PAUSE_PUBLISH   "pausePublish"
+#define RTMP_AMF0_COMMAND_TB_RESUME_PUBLISH   "resumePublish"
+
+/**
 * band width check method name, which will be invoked by client.
 * band width check mothods use SrsBandwidthPacket as its internal packet type,
 * so ensure you set command name when you use it.
@@ -772,6 +778,14 @@ int SrsProtocol::do_decode_message(SrsMessageHeader& header, SrsStream* stream, 
         } else if(command == RTMP_AMF0_COMMAND_PUBLISH) {
             srs_info("decode the AMF0/AMF3 command(publish message).");
             *ppacket = packet = new SrsPublishPacket();
+            return packet->decode(stream);
+        } else if(command == RTMP_AMF0_COMMAND_TB_PAUSE_PUBLISH) {
+            srs_info("decode the AMF0/AMF3 command(tb pause publish message).");
+            *ppacket = packet = new SrsTbPausePublishPacket();
+            return packet->decode(stream);
+        } else if(command == RTMP_AMF0_COMMAND_TB_RESUME_PUBLISH) {
+            srs_info("decode the AMF0/AMF3 command(tb resume publish message).");
+            *ppacket = packet = new SrsTbResumePublishPacket();
             return packet->decode(stream);
         } else if(command == RTMP_AMF0_COMMAND_UNPUBLISH) {
             srs_info("decode the AMF0/AMF3 command(unpublish message).");
@@ -2729,8 +2743,23 @@ int SrsPublishPacket::decode(SrsStream* stream)
         return ret;
     }
     
+    /*
     if ((ret = srs_amf0_read_null(stream)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish command_object failed. ret=%d", ret);
+        return ret;
+    }
+    */
+    if ((ret = srs_amf0_read_any(stream, &command_object)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode publish command_object failed. ret=%d", ret);
+        return ret;
+    }
+    if (command_object->is_object()) {
+        srs_info("amf0 decode publish command_object is object, old tieba client identified.");
+    } else if (command_object->is_null()) {
+        srs_info("amf0 decode publish command_object is null, standard client identified.");
+    } else {
+        ret = ERROR_RTMP_AMF0_DECODE;
+        srs_error("amf0 decode publish command_object is neither null nor object. ret=%d", ret);
         return ret;
     }
     
@@ -2856,6 +2885,176 @@ int SrsPausePacket::decode(SrsStream* stream)
     }
     
     srs_info("amf0 decode pause packet success");
+    
+    return ret;
+}
+
+SrsTbPausePublishPacket::SrsTbPausePublishPacket()
+{
+    command_name = RTMP_AMF0_COMMAND_TB_PAUSE_PUBLISH;
+    transaction_id = 0;
+    command_object = SrsAmf0Any::null();
+}
+
+SrsTbPausePublishPacket::~SrsTbPausePublishPacket()
+{
+    srs_freep(command_object);
+}
+
+int SrsTbPausePublishPacket::decode(SrsStream* stream)
+{
+    int ret = ERROR_SUCCESS;
+
+    if ((ret = srs_amf0_read_string(stream, command_name)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb pause publish command_name failed. ret=%d", ret);
+        return ret;
+    }
+    if (command_name.empty() || command_name != RTMP_AMF0_COMMAND_TB_PAUSE_PUBLISH) {
+        ret = ERROR_RTMP_AMF0_DECODE;
+        srs_error("amf0 decode tb pause publish command_name failed. "
+            "command_name=%s, ret=%d", command_name.c_str(), ret);
+        return ret;
+    }
+    
+    if ((ret = srs_amf0_read_number(stream, transaction_id)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb pause publish transaction_id failed. ret=%d", ret);
+        return ret;
+    }
+    
+    if ((ret = srs_amf0_read_null(stream)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb pause publish command_object failed. ret=%d", ret);
+        return ret;
+    }
+    
+    srs_info("amf0 decode tb pause publish packet success");
+    
+    return ret;
+}
+
+int SrsTbPausePublishPacket::get_prefer_cid()
+{
+    return RTMP_CID_OverStream;
+}
+
+int SrsTbPausePublishPacket::get_message_type()
+{
+    return RTMP_MSG_AMF0CommandMessage;
+}
+
+int SrsTbPausePublishPacket::get_size()
+{
+    return SrsAmf0Size::str(command_name) + SrsAmf0Size::number()
+        + SrsAmf0Size::null();
+}
+
+int SrsTbPausePublishPacket::encode_packet(SrsStream* stream)
+{
+    int ret = ERROR_SUCCESS;
+    
+    if ((ret = srs_amf0_write_string(stream, command_name)) != ERROR_SUCCESS) {
+        srs_error("encode command_name failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode command_name success.");
+    
+    if ((ret = srs_amf0_write_number(stream, transaction_id)) != ERROR_SUCCESS) {
+        srs_error("encode transaction_id failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode transaction_id success.");
+    
+    if ((ret = srs_amf0_write_null(stream)) != ERROR_SUCCESS) {
+        srs_error("encode command_object failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode command_object success.");
+    
+    srs_info("encode pause publish packet success.");
+    
+    return ret;
+}
+
+SrsTbResumePublishPacket::SrsTbResumePublishPacket()
+{
+    command_name = RTMP_AMF0_COMMAND_TB_RESUME_PUBLISH;
+    transaction_id = 0;
+    command_object = SrsAmf0Any::null();
+}
+
+SrsTbResumePublishPacket::~SrsTbResumePublishPacket()
+{
+    srs_freep(command_object);
+}
+
+int SrsTbResumePublishPacket::decode(SrsStream* stream)
+{
+    int ret = ERROR_SUCCESS;
+
+    if ((ret = srs_amf0_read_string(stream, command_name)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb resume publish command_name failed. ret=%d", ret);
+        return ret;
+    }
+    if (command_name.empty() || command_name != RTMP_AMF0_COMMAND_TB_RESUME_PUBLISH) {
+        ret = ERROR_RTMP_AMF0_DECODE;
+        srs_error("amf0 decode tb resume publish command_name failed. "
+            "command_name=%s, ret=%d", command_name.c_str(), ret);
+        return ret;
+    }
+    
+    if ((ret = srs_amf0_read_number(stream, transaction_id)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb resume publish transaction_id failed. ret=%d", ret);
+        return ret;
+    }
+    
+    if ((ret = srs_amf0_read_null(stream)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode tb resume publish command_object failed. ret=%d", ret);
+        return ret;
+    }
+    
+    srs_info("amf0 decode tb resume publish packet success");
+    
+    return ret;
+}
+
+int SrsTbResumePublishPacket::get_prefer_cid()
+{
+    return RTMP_CID_OverStream;
+}
+
+int SrsTbResumePublishPacket::get_message_type()
+{
+    return RTMP_MSG_AMF0CommandMessage;
+}
+
+int SrsTbResumePublishPacket::get_size()
+{
+    return SrsAmf0Size::str(command_name) + SrsAmf0Size::number()
+        + SrsAmf0Size::null();
+}
+
+int SrsTbResumePublishPacket::encode_packet(SrsStream* stream)
+{
+    int ret = ERROR_SUCCESS;
+    
+    if ((ret = srs_amf0_write_string(stream, command_name)) != ERROR_SUCCESS) {
+        srs_error("encode command_name failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode command_name success.");
+    
+    if ((ret = srs_amf0_write_number(stream, transaction_id)) != ERROR_SUCCESS) {
+        srs_error("encode transaction_id failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode transaction_id success.");
+    
+    if ((ret = srs_amf0_write_null(stream)) != ERROR_SUCCESS) {
+        srs_error("encode command_object failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("encode command_object success.");
+    
+    srs_info("encode resume publish packet success.");
     
     return ret;
 }
