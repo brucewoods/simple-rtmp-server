@@ -2304,17 +2304,6 @@ int SrsCallPacket::decode(SrsStream* stream)
         return ret;
     }
     
-    //test
-    /*
-    while (!stream->empty()) {
-        char xxx = stream->read_1bytes();
-        if (xxx >= 32 && xxx < 127) {
-            srs_info("now=%c", xxx);
-        } else {
-            srs_info("now=%#x", xxx);
-        }
-    }
-    */
     srs_freep(command_object);
     if ((ret = SrsAmf0Any::discovery(stream, &command_object)) != ERROR_SUCCESS) {
         srs_error("amf0 discovery call command_object failed. ret=%d", ret);
