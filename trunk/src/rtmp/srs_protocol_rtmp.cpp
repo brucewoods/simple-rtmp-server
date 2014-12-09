@@ -1019,8 +1019,10 @@ int SrsRtmpServer::identify_client(int stream_id, SrsRtmpConnType& type, string&
         if (dynamic_cast<SrsFMLEStartPacket*>(pkt)) {
             //TODO: FIXME: here may be incorrect way of tbclient
             //there should be some dirty code to decide
+            /*
             srs_info("identify client by releaseStream, fmle publish.");
             return identify_fmle_publish_client(dynamic_cast<SrsFMLEStartPacket*>(pkt), type, stream_name);
+            */
         }
         if (dynamic_cast<SrsPlayPacket*>(pkt)) {
             srs_info("level0 identify client by play.");
