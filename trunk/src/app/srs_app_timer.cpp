@@ -32,6 +32,8 @@ SrsTimer::SrsTimer(int _interval) {
     click_cnt = interval = _interval;
 }
 
+SrsTimer::~SrsTimer() {}
+
 void SrsTimer::set_timer_id(int _timer_id) {
     timer_id = _timer_id;
 }
