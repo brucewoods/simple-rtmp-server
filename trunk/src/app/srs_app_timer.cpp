@@ -22,12 +22,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <srs_app_timer.hpp>
-
-#include ...
+#include <srs_kernel_error.hpp>
 
 SrsTimer::SrsTimer(int _interval) {
     timer_id = -1;
+    paused = false;
     click_cnt = interval = _interval;
+}
+
+void SrsTimer::set_timer_id(int _timer_id) {
+    timer_id = _timer_id;
 }
 
 int SrsTimer::click() {
@@ -40,4 +44,45 @@ int SrsTimer::click() {
     }
 }
 
+void SrsTimer::reset() {
+}
 
+void SrsTimer::pause() {
+    paused = true;
+}
+
+void SrsTimer::resume() {
+    paused = false;
+}
+
+bool SrsTimer::is_paused() {
+    return paused;
+}
+
+SrsTimerMgr::SrsTimerMgr(SrsServer* srs_server) {
+    timer_id_alloc = 0;
+    server = srs_server;
+
+    pthread = new SrsThread(this, 1*1000*1000LL, false);
+}
+
+SrsTimerMgr::~SrsTimerMgr() {
+    srs_freep(pthread);
+}
+
+int SrsTimerMgr::start() {
+    return pthread->start();
+}
+
+int SrsTimerMgr::cycle() {
+    int ret = ERROR_SUCCESS;
+
+    for (std::map<int, SrsTimer*>::iterator itimer = timers.begin(); itimer != timers.end(); itimer++) {
+        SrsTimer* timer = itimer->second;
+        if (!timer->is_paused() && (timer->click()) == 0) {
+            timer->callback();
+        }
+    }
+
+    return ret;
+}

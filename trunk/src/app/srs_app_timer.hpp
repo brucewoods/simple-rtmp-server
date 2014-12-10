@@ -24,33 +24,45 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SRS_APP_TIMER_HPP
 #define SRS_APP_TIMER_HPP
 
-#include <srs_app_thread.hpp>
-
 /*
 #include <srs_app_timer.hpp>
  */
+
+#include <map>
+
+#include <srs_core.hpp>
+#include <srs_app_thread.hpp>
+#include <srs_app_server.hpp>
 
 class SrsTimer {
 private:
     int timer_id;
     int click_cnt;
     int interval;
+    bool paused;
 public:
     SrsTimer(int _interval);
     virtual ~SrsTimer();
 public:
-    void set_timer_id(int timer_id);
+    void set_timer_id(int _timer_id);
     void reset();
     int click();
+    bool is_paused();
+    void pause();
+    void resume();
 public:
     virtual void callback();
 };
 
-class SrsTimerMgr : public virtual ISrsThreadHandler {
+class SrsTimerMgr : public ISrsThreadHandler {
 private:
+    int timer_id_alloc;
     std::map<int, SrsTimer*> timers;
+
+    SrsThread* pthread;
+    SrsServer* server;
 public:
-    SrsTimerMgr();
+    SrsTimerMgr(SrsServer* srs_server);
     ~SrsTimerMgr();
 public:
     /**
@@ -68,6 +80,9 @@ public:
     */
     int pause_timer(SrsTimer* timer);
     int resume_timer(SrsTimer* timer);
+public:
+    int start();
+    virtual int cycle();
 };
 
 #endif
