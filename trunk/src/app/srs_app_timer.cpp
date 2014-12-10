@@ -38,6 +38,10 @@ void SrsTimer::set_timer_id(int _timer_id) {
     timer_id = _timer_id;
 }
 
+int SrsTimer::get_timer_id() {
+    return timer_id;
+}
+
 int SrsTimer::click() {
     --click_cnt;
     if (click_cnt == 0) {
