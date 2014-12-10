@@ -62,7 +62,7 @@ public:
     */
     void resume();
 public:
-    virtual void callback();
+    virtual void callback() = 0;
 };
 
 class SrsTimerMgr : public ISrsThreadHandler {
