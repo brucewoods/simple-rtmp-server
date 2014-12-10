@@ -322,6 +322,7 @@ SrsServer::SrsServer()
     
     signal_manager = NULL;
     kbps = NULL;
+    timer_manager = NULL;
     
     // donot new object in constructor,
     // for some global instance is not ready now,
@@ -382,6 +383,7 @@ void SrsServer::destroy()
     
     srs_freep(signal_manager);
     srs_freep(kbps);
+    srs_freep(timer_manager);
     
     // @remark never destroy the connections, 
     // for it's still alive.
@@ -410,7 +412,10 @@ int SrsServer::initialize()
     srs_assert(!kbps);
     kbps = new SrsKbps();
     kbps->set_io(NULL, NULL);
-    
+
+    srs_assert(!timer_manager);
+    timer_manager = new SrsTimerMgr(this);
+
 #ifdef SRS_AUTO_HTTP_API
     srs_assert(!http_api_handler);
     http_api_handler = SrsHttpHandler::create_http_api();
@@ -550,6 +555,10 @@ int SrsServer::initialize_st()
     srs_trace("server main cid=%d", _srs_context->get_id());
     
     return ret;
+}
+
+int SrsServer::start_timer_manager() {
+    return timer_manager->start();
 }
 
 int SrsServer::listen()

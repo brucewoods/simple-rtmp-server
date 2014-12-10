@@ -35,6 +35,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_st.hpp>
 #include <srs_app_reload.hpp>
 #include <srs_app_thread.hpp>
+#include <srs_app_timer.hpp>
 
 class SrsServer;
 class SrsConnection;
@@ -156,6 +157,10 @@ private:
     */
     bool signal_reload;
     bool signal_gmc_stop;
+    /**
+    * timer manager
+    */
+    SrsTimerMgr* timer_manager;
 public:
     SrsServer();
     virtual ~SrsServer();
@@ -172,6 +177,7 @@ public:
     virtual int initialize_signal();
     virtual int acquire_pid_file();
     virtual int initialize_st();
+    virtual int start_timer_manager();
     virtual int listen();
     virtual int register_signal();
     virtual int ingest();

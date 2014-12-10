@@ -278,6 +278,10 @@ int run_master()
     if ((ret = _srs_server->initialize_st()) != ERROR_SUCCESS) {
         return ret;
     }
+
+    if ((ret = _srs_server->start_timer_manager()) != ERROR_SUCCESS) {
+        return ret;
+    }
     
     if ((ret = _srs_server->listen()) != ERROR_SUCCESS) {
         return ret;

@@ -44,7 +44,8 @@ int SrsTimer::click() {
     }
 }
 
-void SrsTimer::reset() {
+void SrsTimer::set_interval(int _interval) {
+    click_cnt = interval = _interval;
 }
 
 void SrsTimer::pause() {
@@ -68,6 +69,42 @@ SrsTimerMgr::SrsTimerMgr(SrsServer* srs_server) {
 
 SrsTimerMgr::~SrsTimerMgr() {
     srs_freep(pthread);
+}
+
+int SrsTimerMgr::create_timer(SrsTimer* timer) {
+    int ret = ERROR_SUCCESS;
+    if (timer->get_timer_id() >= 0) {
+        // TODO: print an error log
+        ret = ERROR_TIMER_EXIST;
+        return ret;
+    }
+
+    // allocate an id
+    while (true) {
+        if (timers.find(timer_id_alloc) == timers.end()) {
+            timer->set_timer_id(timer_id_alloc);
+            timers[timer_id_alloc] = timer;
+            timer_id_alloc = (timer_id_alloc+1) % TIMER_ID_ALLOC_MASK;
+            break;
+        }
+        timer_id_alloc = (timer_id_alloc+1) % TIMER_ID_ALLOC_MASK;
+    }
+
+    return ret;
+}
+
+int SrsTimerMgr::remove_timer(SrsTimer* timer) {
+    int ret = ERROR_SUCCESS;
+
+    int timer_id = timer->get_timer_id();
+    if (timer_id < 0) {
+        return ret;
+    }
+
+    timers.erase(timer_id);
+    timer->set_timer_id(-1);
+
+    return ret;
 }
 
 int SrsTimerMgr::start() {

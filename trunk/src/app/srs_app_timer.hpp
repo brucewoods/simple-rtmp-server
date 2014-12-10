@@ -44,17 +44,28 @@ public:
     SrsTimer(int _interval);
     virtual ~SrsTimer();
 public:
+    int get_timer_id();
     void set_timer_id(int _timer_id);
-    void reset();
+    void set_interval(int _interval);
     int click();
     bool is_paused();
+    /**
+    * pause a timer's counting down
+    * that is, the timer stop counting down and not calling its callback()
+    */
     void pause();
+    /**
+    * resume a timer's counting down
+    * the reverse operation to pause_timer
+    */
     void resume();
 public:
     virtual void callback();
 };
 
 class SrsTimerMgr : public ISrsThreadHandler {
+private:
+    const static int TIMER_ID_ALLOC_MASK = 65536;
 private:
     int timer_id_alloc;
     std::map<int, SrsTimer*> timers;
@@ -74,12 +85,11 @@ public:
     */
     int remove_timer(SrsTimer* timer);
 
-    /**
-    * pause a timer
-    * that is,
-    */
+    /*
     int pause_timer(SrsTimer* timer);
     int resume_timer(SrsTimer* timer);
+    */
+
 public:
     int start();
     virtual int cycle();
