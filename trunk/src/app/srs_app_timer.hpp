@@ -28,11 +28,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_timer.hpp>
  */
 
+#include <srs_core.hpp>
+
 #include <map>
 
-#include <srs_core.hpp>
 #include <srs_app_thread.hpp>
-#include <srs_app_server.hpp>
+
+class SrsServer;
 
 class SrsTimer {
 private:

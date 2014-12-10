@@ -22,7 +22,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <srs_app_timer.hpp>
+
 #include <srs_kernel_error.hpp>
+#include <srs_app_server.hpp>
 
 SrsTimer::SrsTimer(int _interval) {
     timer_id = -1;

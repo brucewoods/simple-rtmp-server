@@ -35,7 +35,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_st.hpp>
 #include <srs_app_reload.hpp>
 #include <srs_app_thread.hpp>
-#include <srs_app_timer.hpp>
 
 class SrsServer;
 class SrsConnection;
@@ -43,6 +42,7 @@ class SrsHttpHandler;
 class SrsIngester;
 class SrsHttpHeartbeat;
 class SrsKbps;
+class SrsTimer;
 
 // listener type for server to identify the connection,
 // that is, use different type to process the connection.
