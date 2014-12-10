@@ -42,7 +42,9 @@ class SrsHttpHandler;
 class SrsIngester;
 class SrsHttpHeartbeat;
 class SrsKbps;
+class SrsTimer;
 class SrsTimerMgr;
+class SrsTimerTest;
 
 // listener type for server to identify the connection,
 // that is, use different type to process the connection.
@@ -249,4 +251,11 @@ public:
     virtual int on_reload_http_stream_updated();
 };
 
+#include <srs_app_timer.hpp>
+
+class TimerTest : public SrsTimer {
+public:
+    TimerTest(int _interval);
+    virtual void callback();
+};
 #endif
