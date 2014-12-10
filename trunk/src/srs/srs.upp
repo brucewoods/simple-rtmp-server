@@ -110,6 +110,8 @@ file
 	..\app\srs_app_source.cpp,
 	..\app\srs_app_thread.hpp,
 	..\app\srs_app_thread.cpp,
+	..\app\srs_app_timer.hpp,
+	..\app\srs_app_timer.cpp,
 	..\app\srs_app_utility.hpp,
 	..\app\srs_app_utility.cpp,
 	utest readonly separator,

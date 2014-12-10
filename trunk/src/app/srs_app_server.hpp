@@ -42,7 +42,7 @@ class SrsHttpHandler;
 class SrsIngester;
 class SrsHttpHeartbeat;
 class SrsKbps;
-class SrsTimer;
+class SrsTimerMgr;
 
 // listener type for server to identify the connection,
 // that is, use different type to process the connection.
