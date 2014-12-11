@@ -46,11 +46,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_heartbeat.hpp>
 #include <srs_app_timer.hpp>
 
-TimerTest::TimerTest(int _interval) : SrsTimer(_interval) {}
-void TimerTest::callback() {
-    srs_trace("wo yao da shi ge");
-}
-
 // signal defines.
 #define SIGNAL_RELOAD SIGHUP
 
@@ -566,8 +561,10 @@ int SrsServer::initialize_st()
 int SrsServer::start_timer_manager() {
     int ret = timer_manager->start();
 
-    TimerTest* tt = new TimerTest(5);
-    timer_manager->create_timer(tt);
+    if (ret != ERROR_SUCCESS) {
+        //print error log
+    }
+
     return ret;
 }
 
