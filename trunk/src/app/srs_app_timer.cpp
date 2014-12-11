@@ -79,7 +79,7 @@ SrsTimerMgr::~SrsTimerMgr() {
     srs_freep(pthread);
 }
 
-int SrsTimerMgr::create_timer(SrsTimer* timer) {
+int SrsTimerMgr::regist_timer(SrsTimer* timer) {
     int ret = ERROR_SUCCESS;
     if (timer->get_timer_id() >= 0) {
         // TODO: print an error log

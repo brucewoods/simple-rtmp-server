@@ -157,6 +157,7 @@ private:
     */
     bool signal_reload;
     bool signal_gmc_stop;
+public:
     /**
     * timer manager
     */

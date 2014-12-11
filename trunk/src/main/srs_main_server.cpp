@@ -38,6 +38,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_server.hpp>
 #include <srs_app_config.hpp>
 #include <srs_app_log.hpp>
+#include <srs_app_tb_log.hpp>
 #include <srs_kernel_utility.hpp>
 
 // pre-declare
@@ -49,6 +50,7 @@ int run_master();
 // instead, subscribe handler in initialize method.
 // kernel module.
 ISrsLog* _srs_log = new SrsFastLog();
+SrsTbLog* _tb_log = new SrsTbLog();
 ISrsThreadContext* _srs_context = new SrsThreadContext();
 // app module.
 SrsConfig* _srs_config = new SrsConfig();
@@ -226,6 +228,7 @@ int run()
     }
     
     srs_trace("start deamon mode...");
+	_tb_log->notice("start deamon mode...");
     
     int pid = fork();
     

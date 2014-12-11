@@ -22,6 +22,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <srs_app_rtmp_conn.hpp>
+#include <srs_app_stat_timer.hpp>
+#include <srs_app_tb_log.hpp>
 
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -72,9 +74,29 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
+const int STAT_LOG_INTERVAL = 10;
+
+extern SrsServer* _srs_server;
+
+SrsClientInfo::SrsClientInfo()
+{
+	client_type = Android;
+	client_version = "";
+	user_role = player;
+	net_type = wifi;
+	conn_id = SrsIdAlloc::generate_id();
+	user_id = -1;
+	group_id = -1;
+}
+
+SrsClientInfo::~SrsClientInfo()
+{
+}
+
 SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     : SrsConnection(srs_server, client_stfd)
 {
+	client_info = new SrsClientInfo();
     req = new SrsRequest();
     res = new SrsResponse();
     skt = new SrsStSocket(client_stfd);
@@ -91,7 +113,8 @@ SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
 SrsRtmpConn::~SrsRtmpConn()
 {
     _srs_config->unsubscribe(this);
-    
+
+	srs_freep(client_info);
     srs_freep(req);
     srs_freep(res);
     srs_freep(rtmp);
@@ -267,6 +290,10 @@ int SrsRtmpConn::service_cycle()
         return ret;
     }
     srs_verbose("on_bw_done success");
+
+	//add stat timer
+	SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+	_srs_server->timer_manager->regist_timer(conn_stat_timer);
     
     while (true) {
         ret = stream_service_cycle();
@@ -1210,5 +1237,14 @@ void SrsRtmpConn::http_hooks_on_stop()
 #endif
 
     return;
+}
+
+void SrsRtmpConn::stat_log()
+{
+	srs_trace("smile print stat log");
+	_tb_log->info("[logid=%s %s user_id=%s conn_id=%s client_type=%d client_version=%d 
+		user_role=%d net_type=%d recv_bytes=%d send_bytes=%d]", SrsIdAlloc::generate_id(), TB_LOG_COMMON_ITEM, 
+		client_info->user_id, client_info->conn_id, client_info->client_type, client_info->client_version,
+		client_info->user_role, client_info->net_type, SrsKbps->get_recv_bytes(), SrsKbps->get_send_bytes());
 }
 
