@@ -81,7 +81,7 @@ public:
     /**
     * create a timer
     */
-    int create_timer(SrsTimer* timer);
+    int regist_timer(SrsTimer* timer);
     /**
     * remove a timer
     */

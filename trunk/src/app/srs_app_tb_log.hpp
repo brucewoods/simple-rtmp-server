@@ -36,12 +36,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
+const string TB_LOG_COMMON_ITEM = " product=tieba subsys=live module=srs ";
+const string TB_LOG_BODY_BEGIN = "[";
+const string TB_LOG_BODY_END = "]";
+
+class SrsIdAlloc
+{
+public:
+	static string generate_id();
+};
+
 /**
 * we use memory/disk cache and donot flush when write log.
 * it's ok to use it without config, which will log to console, and default trace level.
 * when you want to use different level, override this classs, set the protected _level.
 */
-class SrsTbLog : public ISrsLog, public ISrsReloadHandler
+class SrsTbLog
 {
 // for utest to override
 protected:
@@ -60,9 +70,12 @@ public:
     virtual ~SrsTbLog();
 public:
     virtual int initialize();
-    virtual void fatal(const char* tag, int context_id, const char* fmt, ...);
+	virtual void notice(const char* fmt, ...);
+	virtual void warn(const char* fmt, ...);
+	virtual void error(const char* fmt, ...);
+    virtual void fatal(const char* fmt, ...);
 private:
-    virtual bool generate_header(const char* tag, int context_id, const char* level_name, int* header_size);
+    virtual bool generate_header(const char* level_name, int* header_size);
     virtual void write_log(int& fd, char* str_log, int size, int level);
     virtual void open_log_file();
 	virtual void open_wf_log_file();

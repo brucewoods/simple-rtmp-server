@@ -48,6 +48,27 @@ const int TB_LOG_TAIL_SIZE = 1;
 const string TB_LOG_FILE = "logs/tb_live.log";
 const string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
 
+string SrsIdAlloc::generate_id()
+{
+	timeval tv;
+    if (gettimeofday(&tv, NULL) == -1) {
+        return "";
+    }
+	
+	struct tm* tm;
+    if ((tm = localtime(&tv.tv_sec)) == NULL) {
+        return "";
+    }
+
+	srand((unsigned)time(0));
+	int random_num = rand()  % 1000;
+	
+	string log_id = "";
+	sprintf(log_id.c_str(),
+           "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
+	return log_id;
+}
+
 SrsTbLog::SrsTbLog()
 {
     _level = SrsLogLevel::Notice;
@@ -83,7 +104,7 @@ int SrsTbLog::initialize()
     return ret;
 }
 
-void SrsTbLog::Info(const char* tag, int context_id, const char* fmt, ...)
+void SrsTbLog::notice(const char* fmt, ...)
 {
 	if (_level > SrsLogLevel::Notice) {
         return;
@@ -102,7 +123,7 @@ void SrsTbLog::Info(const char* tag, int context_id, const char* fmt, ...)
 
     write_log(false, log_data, size, SrsLogLevel::Notice);
 }
-void SrsTbLog::warn(const char* tag, int context_id, const char* fmt, ...)
+void SrsTbLog::warn(const char* fmt, ...)
 {
     if (_level > SrsLogLevel::Warn) {
         return;
@@ -122,7 +143,7 @@ void SrsTbLog::warn(const char* tag, int context_id, const char* fmt, ...)
     write_log(true, log_data, size, SrsLogLevel::Warn);
 }
 
-void SrsTbLog::error(const char* tag, int context_id, const char* fmt, ...)
+void SrsTbLog::error(const char* fmt, ...)
 {
     if (_level > SrsLogLevel::Error) {
         return;
@@ -142,7 +163,7 @@ void SrsTbLog::error(const char* tag, int context_id, const char* fmt, ...)
     write_log(true, log_data, size, SrsLogLevel::Error);
 }
 
-void SrsTbLog::fatal(const char* tag, int context_id, const char* fmt, ...)
+void SrsTbLog::fatal(const char* fmt, ...)
 {
     if (_level > SrsLogLevel::Fatal) {
         return;
