@@ -790,7 +790,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         }
 
         SrsAutoFree(SrsMessage, msg);
-        
+
         pithy_print.elapse();
 
         // reportable
