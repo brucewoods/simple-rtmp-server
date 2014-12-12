@@ -36,16 +36,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
-const string TB_LOG_COMMON_ITEM = " product=tieba subsys=live module=srs ";
-const string TB_LOG_BODY_BEGIN = "[";
-const string TB_LOG_BODY_END = "]";
+const std::string TB_LOG_COMMON_ITEM = " product=tieba subsys=live module=srs ";
+const std::string TB_LOG_BODY_BEGIN = "[";
+const std::string TB_LOG_BODY_END = "]";
 
 class SrsIdAlloc
 {
 private:
 public:
-	static std::string generate_log_id();	
-	static std::String generate_conn_id();
+	static std::string generate_log_id();
+	static std::string generate_conn_id();
 };
 
 /**
