@@ -184,6 +184,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define ERROR_KERNEL_STREAM_INIT            3038
 #define ERROR_EDGE_VHOST_REMOVED            3039
 #define ERROR_TIMER_EXIST                   3050
+#define ERROR_HTTP_ON_PUBLISH_AUTH_FAIL     3051
 
 /**
 * whether the error code is an system control error.

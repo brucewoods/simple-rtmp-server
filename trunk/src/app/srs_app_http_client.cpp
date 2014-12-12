@@ -39,6 +39,9 @@ using namespace std;
 // when error, http client sleep for a while and retry.
 #define SRS_HTTP_CLIENT_SLEEP_US (int64_t)(3*1000*1000LL)
 
+// TODO: use config file to configure this param
+#define SRS_HTTP_DEFAULT_RETRY 2;
+
 SrsHttpClient::SrsHttpClient()
 {
     connected = false;
@@ -66,12 +69,18 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
             return ret;
         }
     }
-    
-    if ((ret = connect(uri)) != ERROR_SUCCESS) {
+
+    int retry = SRS_HTTP_DEFAULT_RETRY;
+    while (retry--) {
+        if ((ret = connect(uri)) == ERROR_SUCCESS) {
+            break;
+        }
+    }
+    if (ret != ERROR_SUCCESS) {
         srs_warn("http connect server failed. ret=%d", ret);
         return ret;
     }
-    
+
     // send POST request to uri
     // POST %s HTTP/1.1\r\nHost: %s\r\nContent-Length: %d\r\n\r\n%s
     std::stringstream ss;
@@ -81,14 +90,20 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
         << "Connection: Keep-Alive" << __SRS_CRLF
         << "Content-Length: " << std::dec << req.length() << __SRS_CRLF
         << "User-Agent: " << RTMP_SIG_SRS_NAME << RTMP_SIG_SRS_VERSION << __SRS_CRLF
-        << "Content-Type: text/html" << __SRS_CRLF
+        << "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" << __SRS_CRLF
         << __SRS_CRLF
         << req;
     
     SrsStSocket skt(stfd);
     
     std::string data = ss.str();
-    if ((ret = skt.write((void*)data.c_str(), data.length(), NULL)) != ERROR_SUCCESS) {
+    retry = SRS_HTTP_DEFAULT_RETRY;
+    while (retry--) {
+        if ((ret = skt.write((void*)data.c_str(), data.length(), NULL)) == ERROR_SUCCESS) {
+            break;
+        }
+    }
+    if (ret != ERROR_SUCCESS) {
         // disconnect when error.
         disconnect();
         
@@ -97,7 +112,13 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
     }
     
     SrsHttpMessage* msg = NULL;
-    if ((ret = parser->parse_message(&skt, &msg)) != ERROR_SUCCESS) {
+    retry = SRS_HTTP_DEFAULT_RETRY;
+    while (retry--) {
+        if ((ret = parser->parse_message(&skt, &msg)) == ERROR_SUCCESS) {
+            break;
+        }
+    }
+    if (ret != ERROR_SUCCESS) {
         srs_error("parse http post response failed. ret=%d", ret);
         return ret;
     }
