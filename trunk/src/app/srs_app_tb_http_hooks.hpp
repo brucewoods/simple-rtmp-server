@@ -31,16 +31,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_core.hpp>
 
 #include <string>
+#include <sstream>
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
 
 #include <http_parser.h>
 
 class SrsHttpUri;
-class SrsStSocket;
 class SrsRequest;
-class SrsHttpParser;
-class SrsFlvSegment;
 
 /**
 * the http hooks, http callback api,
@@ -53,6 +51,9 @@ private:
     SrsTbHttpHooks();
 public:
     virtual ~SrsTbHttpHooks();
+private:
+    template<class T>
+    static void append_param(std::stringstream& s, const char* key, const T &value, bool with_amp = true);
 public:
     /**
     * on_connect hook, when client connect to srs.
