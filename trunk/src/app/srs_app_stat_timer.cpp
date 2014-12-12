@@ -20,20 +20,20 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
+#include <srs_app_rtmp_conn.hpp>
 #include <srs_app_stat_timer.hpp>
 
-SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn)
-	:SrsTimer(_interval)
+SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn) 
+	: SrsTimer(_interval)
 {
 	rtmp_conn = _rtmp_conn;
 }
 
-SrsConnStatTimer::~~SrsConnStatTimer()
+SrsConnStatTimer::~SrsConnStatTimer()
 {
 }
 
-SrsConnStatTimer::callback()
+void SrsConnStatTimer::callback()
 {
 	rtmp_conn->stat_log();
 }

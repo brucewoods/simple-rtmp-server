@@ -35,6 +35,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_utility.hpp>
 #include <srs_kernel_utility.hpp>
 
+#include <stdlib.h>
+
+using namespace std;
+
 // the max size of a line of log.
 const int TB_LOG_MAX_SIZE = 4096;
 
@@ -48,7 +52,7 @@ const int TB_LOG_TAIL_SIZE = 1;
 const string TB_LOG_FILE = "logs/tb_live.log";
 const string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
 
-string SrsIdAlloc::generate_id()
+string SrsIdAlloc::generate_log_id()
 {
 	timeval tv;
     if (gettimeofday(&tv, NULL) == -1) {
@@ -63,9 +67,11 @@ string SrsIdAlloc::generate_id()
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
 	
-	string log_id = "";
-	sprintf(log_id.c_str(),
+    char log_id_tmp[20];
+	sprintf(log_id_tmp,
            "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
+	string log_id(log_id_tmp);
+
 	return log_id;
 }
 
@@ -211,7 +217,7 @@ bool SrsTbLog::generate_header(const char* level_name, int* header_size)
     }
     
     // write the header size.
-    *header_size = srs_min(LOG_MAX_SIZE - 1, log_header_size);
+    *header_size = srs_min(TB_LOG_MAX_SIZE - 1, log_header_size);
     
     return true;
 }

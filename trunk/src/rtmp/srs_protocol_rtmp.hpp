@@ -73,10 +73,10 @@ class SrsClientInfo
 {
 public:
 	int client_type;
-	string client_version;
+	std::string client_version;
 	int user_role;
 	int net_type;
-	string conn_id;
+	std::string conn_id;
 	int64_t user_id;
 	int64_t group_id;
 public:
