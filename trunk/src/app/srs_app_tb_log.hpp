@@ -42,8 +42,10 @@ const string TB_LOG_BODY_END = "]";
 
 class SrsIdAlloc
 {
+private:
 public:
-	static string generate_id();
+	static std::string generate_log_id();	
+	static std::String generate_conn_id();
 };
 
 /**
