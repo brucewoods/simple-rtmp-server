@@ -42,8 +42,10 @@ const string TB_LOG_BODY_END = "]";
 
 class SrsIdAlloc
 {
+private:
 public:
-	static string generate_id();
+	static std::string generate_log_id();	
+	static std::String generate_conn_id();
 };
 
 /**
@@ -70,15 +72,15 @@ public:
     virtual ~SrsTbLog();
 public:
     virtual int initialize();
-	virtual void notice(const char* fmt, ...);
-	virtual void warn(const char* fmt, ...);
-	virtual void error(const char* fmt, ...);
+    virtual void notice(const char* fmt, ...);
+    virtual void warn(const char* fmt, ...);
+    virtual void error(const char* fmt, ...);
     virtual void fatal(const char* fmt, ...);
 private:
     virtual bool generate_header(const char* level_name, int* header_size);
     virtual void write_log(int& fd, char* str_log, int size, int level);
     virtual void open_log_file();
-	virtual void open_wf_log_file();
+    virtual void open_wf_log_file();
 };
 
 #endif

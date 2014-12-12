@@ -47,6 +47,43 @@ class SrsMessage;
 class SrsPacket;
 class SrsAmf0Object;
 
+//tb user info
+enum e_client_type
+{
+	Pc = 1,
+	Android = 2,
+	Ios = 3,
+};
+
+enum e_user_role
+{
+	player = 1,
+	publisher = 2,
+	edge = 3,
+};
+
+enum e_net_type
+{
+	wired = 1,
+	wifi = 2,
+	mobile = 3,
+};
+
+class SrsClientInfo
+{
+public:
+	int client_type;
+	string client_version;
+	int user_role;
+	int net_type;
+	string conn_id;
+	int64_t user_id;
+	int64_t group_id;
+public:
+	SrsClientInfo();
+	~SrsClientInfo();
+};
+
 /**
 * the original request from client.
 */
@@ -88,6 +125,7 @@ public:
     // used for edge traverse to origin authentication,
     // @see https://github.com/winlinvip/simple-rtmp-server/issues/104
     SrsAmf0Object* args;
+	SrsClientInfo* client_info;
 public:
     SrsRequest();
     virtual ~SrsRequest();

@@ -76,6 +76,7 @@ SrsRequest::SrsRequest()
     objectEncoding = RTMP_SIG_AMF0_VER;
     duration = -1;
     args = NULL;
+	client_info = NULL;
 }
 
 SrsRequest::~SrsRequest()
