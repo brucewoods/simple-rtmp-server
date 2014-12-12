@@ -33,7 +33,7 @@ SrsConnStatTimer::~SrsConnStatTimer()
 {
 }
 
-SrsConnStatTimer::callback()
+void SrsConnStatTimer::callback()
 {
 	rtmp_conn->stat_log();
 }
