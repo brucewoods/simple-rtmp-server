@@ -106,10 +106,10 @@ int SrsTbLog::initialize()
 
 void SrsTbLog::notice(const char* fmt, ...)
 {
-	if (_level > SrsLogLevel::Notice) {
-        return;
-    }
-
+	if (_level > SrsLogLevel::Notice)
+	{
+		return;
+	}
 	int size = 0;
     if (!generate_header("NOTICE", &size)) {
         return;
@@ -123,6 +123,7 @@ void SrsTbLog::notice(const char* fmt, ...)
 
     write_log(false, log_data, size, SrsLogLevel::Notice);
 }
+
 void SrsTbLog::warn(const char* fmt, ...)
 {
     if (_level > SrsLogLevel::Warn) {

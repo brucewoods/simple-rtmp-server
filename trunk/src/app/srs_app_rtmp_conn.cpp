@@ -77,6 +77,7 @@ using namespace std;
 const int STAT_LOG_INTERVAL = 10;
 
 extern SrsServer* _srs_server;
+extern SrsTbLog* _tb_log;
 
 SrsClientInfo::SrsClientInfo()
 {
@@ -817,7 +818,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         }
 
         SrsAutoFree(SrsMessage, msg);
-        
+
         pithy_print.elapse();
 
         // reportable
@@ -1242,9 +1243,6 @@ void SrsRtmpConn::http_hooks_on_stop()
 void SrsRtmpConn::stat_log()
 {
 	srs_trace("smile print stat log");
-	_tb_log->info("[logid=%s %s user_id=%s conn_id=%s client_type=%d client_version=%d 
-		user_role=%d net_type=%d recv_bytes=%d send_bytes=%d]", SrsIdAlloc::generate_id(), TB_LOG_COMMON_ITEM, 
-		client_info->user_id, client_info->conn_id, client_info->client_type, client_info->client_version,
-		client_info->user_role, client_info->net_type, SrsKbps->get_recv_bytes(), SrsKbps->get_send_bytes());
+	_tb_log->notice("[logid=%s %s user_id=%s conn_id=%s client_type=%d client_version=%d user_role=%d net_type=%d recv_bytes=%d send_bytes=%d]", SrsIdAlloc::generate_id(), TB_LOG_COMMON_ITEM, client_info->user_id, client_info->conn_id, client_info->client_type, client_info->client_version, client_info->user_role, client_info->net_type, SrsKbps->get_recv_bytes(), SrsKbps->get_send_bytes());
 }
 
