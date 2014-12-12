@@ -79,25 +79,9 @@ const int STAT_LOG_INTERVAL = 10;
 extern SrsServer* _srs_server;
 extern SrsTbLog* _tb_log;
 
-SrsClientInfo::SrsClientInfo()
-{
-	client_type = Android;
-	client_version = "";
-	user_role = player;
-	net_type = wifi;
-	conn_id = SrsIdAlloc::generate_id();
-	user_id = -1;
-	group_id = -1;
-}
-
-SrsClientInfo::~SrsClientInfo()
-{
-}
-
 SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     : SrsConnection(srs_server, client_stfd)
 {
-	client_info = new SrsClientInfo();
     req = new SrsRequest();
     res = new SrsResponse();
     skt = new SrsStSocket(client_stfd);
@@ -115,7 +99,6 @@ SrsRtmpConn::~SrsRtmpConn()
 {
     _srs_config->unsubscribe(this);
 
-	srs_freep(client_info);
     srs_freep(req);
     srs_freep(res);
     srs_freep(rtmp);

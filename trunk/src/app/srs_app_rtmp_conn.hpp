@@ -59,7 +59,6 @@ class SrsSharedPtrMessage;
 class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandler
 {
 private:
-	SrsClientInfo* client_info;
     SrsRequest* req;
     SrsResponse* res;
     SrsStSocket* skt;
