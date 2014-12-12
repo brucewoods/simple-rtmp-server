@@ -50,8 +50,10 @@ public:
     static const int Verbose = 0x01;
     static const int Info = 0x02;
     static const int Trace = 0x03;
+	static const int Notice = 0x03;
     static const int Warn = 0x04;
     static const int Error = 0x05;
+	static const int Fatal = 0x05;
     // specified the disabled level, no log, for utest.
     static const int Disabled = 0x06;
 };

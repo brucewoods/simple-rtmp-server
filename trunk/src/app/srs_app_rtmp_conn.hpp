@@ -50,12 +50,49 @@ class SrsKbps;
 class SrsRtmpClient;
 class SrsSharedPtrMessage;
 
+enum e_client_type
+{
+	Pc = 1,
+	Android = 2,
+	Ios = 3,
+};
+
+enum e_user_role
+{
+	player = 1,
+	publisher = 2,
+	edge = 3,
+};
+
+enum e_net_type
+{
+	wired = 1,
+	wifi = 2,
+	mobile = 3,
+};
+
+class SrsClientInfo
+{
+public:
+	int client_type;
+	string client_version;
+	int user_role;
+	int net_type;
+	string conn_id;
+	int64_t user_id;
+	int64_t group_id;
+public:
+	SrsClientInfo();
+	~SrsClientInfo();
+};
+
 /**
 * the client provides the main logic control for RTMP clients.
 */
 class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandler
 {
 private:
+	SrsClientInfo* client_info;
     SrsRequest* req;
     SrsResponse* res;
     SrsStSocket* skt;
@@ -71,6 +108,7 @@ public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
 public:
+	virtual void stat_log();
     virtual void kbps_resample();
 protected:
     virtual int do_cycle();
