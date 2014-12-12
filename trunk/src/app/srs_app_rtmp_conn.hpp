@@ -34,6 +34,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_conn.hpp>
 #include <srs_app_reload.hpp>
 
+#include <string>
+using namespace std;
+
 class SrsRtmpServer;
 class SrsRequest;
 class SrsResponse;
