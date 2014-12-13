@@ -228,7 +228,7 @@ int run()
     }
     
     srs_trace("start deamon mode...");
-	_tb_log->notice("start deamon mode...");
+	tb_notice("start deamon mode...");
     
     int pid = fork();
     
@@ -269,7 +269,9 @@ int run()
 int run_master()
 {
     int ret = ERROR_SUCCESS;
-    
+   
+	tb_notice("start master mode...");
+
     if ((ret = _srs_server->initialize_signal()) != ERROR_SUCCESS) {
         return ret;
     }
