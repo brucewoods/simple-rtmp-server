@@ -296,7 +296,7 @@ void SrsTbLog::write_log(bool is_except, char *str_log, int size, int level)
 			open_wf_log_file();
 		}
 
-		if (fd > 0)
+		if (wf_fd > 0)
 		{
 			::write(wf_fd, str_log, size);
 		}
@@ -319,7 +319,6 @@ void SrsTbLog::open_log_file()
             S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
         );
     }
-	tb_debug("open log file %s success!", TB_LOG_FILE.c_str());
 }
 
 void SrsTbLog::open_wf_log_file()
@@ -338,7 +337,6 @@ void SrsTbLog::open_wf_log_file()
             S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
         );
     }
-	tb_debug("open log file %s success!", TB_WF_LOG_FILE.c_str());
 }
 
 
