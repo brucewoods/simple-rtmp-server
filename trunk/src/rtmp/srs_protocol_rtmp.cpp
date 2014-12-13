@@ -975,10 +975,13 @@ int SrsRtmpServer::identify_client(int stream_id, SrsRtmpConnType& type, string&
         if ((ret = protocol->recv_message(&msg)) != ERROR_SUCCESS) {
             if (!srs_is_client_gracefully_close(ret)) {
                 srs_error("recv identify client message failed. ret=%d", ret);
+				tb_error("recv identify client message failed. ret=%d", ret);
             }
             return ret;
         }
 
+		tb_debug("recv identify client message success!");
+		
         SrsAutoFree(SrsMessage, msg);
         SrsMessageHeader& h = msg->header;
         
@@ -989,20 +992,26 @@ int SrsRtmpServer::identify_client(int stream_id, SrsRtmpConnType& type, string&
         if (!h.is_amf0_command() && !h.is_amf3_command()) {
             srs_trace("identify ignore messages except "
                 "AMF0/AMF3 command message. type=%#x", h.message_type);
+			tb_debug("SrsRtmpServer::identify_client: identify ignore messages except "
+                "AMF0/AMF3 command message. type=%#x", h.message_type);
             continue;
         }
         
         SrsPacket* pkt = NULL;
         if ((ret = protocol->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
             srs_error("identify decode message failed. ret=%d", ret);
-            return ret;
+			tb_error("identify decode message failed. ret=%d", ret);
+			return ret;
         }
-        
+
+		tb_debug("identify decode message success!");
+		
         SrsAutoFree(SrsPacket, pkt);
         
         if (dynamic_cast<SrsCreateStreamPacket*>(pkt)) {
             srs_info("identify client by create stream, play or flash publish.");
-            return identify_create_stream_client(dynamic_cast<SrsCreateStreamPacket*>(pkt), stream_id, type, stream_name, duration);
+			tb_debug("identify client by create stream, play or flash publish.");
+			return identify_create_stream_client(dynamic_cast<SrsCreateStreamPacket*>(pkt), stream_id, type, stream_name, duration);
         }
         if (dynamic_cast<SrsFMLEStartPacket*>(pkt)) {
             // TODO: FIXME: here may be incorrect way of tbclient
@@ -1409,6 +1418,8 @@ int SrsRtmpServer::identify_create_stream_client(SrsCreateStreamPacket* req, int
         if (!h.is_amf0_command() && !h.is_amf3_command()) {
             srs_trace("identify ignore messages except "
                 "AMF0/AMF3 command message. type=%#x", h.message_type);
+			tb_debug("SrsRtmpServer::identify_create_stream_client: identify ignore messages except "
+                "AMF0/AMF3 command message. type=%#x", h.message_type);	
             continue;
         }
         
@@ -1426,6 +1437,7 @@ int SrsRtmpServer::identify_create_stream_client(SrsCreateStreamPacket* req, int
         }
         if (dynamic_cast<SrsPublishPacket*>(pkt)) {
             srs_info("identify client by publish, falsh publish.");
+			tb_debug("identify client by publish, falsh publish.");
             return identify_flash_publish_client(dynamic_cast<SrsPublishPacket*>(pkt), type, stream_name);
         }
         if (dynamic_cast<SrsCreateStreamPacket*>(pkt)) {
