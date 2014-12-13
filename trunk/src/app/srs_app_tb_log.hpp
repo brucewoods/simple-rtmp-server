@@ -53,7 +53,7 @@ public:
 * it's ok to use it without config, which will log to console, and default trace level.
 * when you want to use different level, override this classs, set the protected _level.
 */
-class SrsTbLog
+class SrsTbLog : public ITbLog
 {
 // for utest to override
 protected:
@@ -72,6 +72,7 @@ public:
     virtual ~SrsTbLog();
 public:
     virtual int initialize();
+	virtual void debug(const char* fmt, ...);
     virtual void notice(const char* fmt, ...);
     virtual void warn(const char* fmt, ...);
     virtual void error(const char* fmt, ...);

@@ -593,6 +593,35 @@ SrsAmf0Object::~SrsAmf0Object()
     srs_freep(eof);
 }
 
+void SrsAmf0Object::print_properties()
+{
+	for (int i = 0; i < properties->count(); i++) {
+        std::string name = this->key_at(i);
+		tb_notice("name = %s", name.c_str());
+        SrsAmf0Any* any = this->value_at(i);
+		if (any->is_boolean())
+		{
+			tb_notice("value = %d", any->to_number());
+		}
+		else if (any->is_number())
+		{
+			tb_notice("value = %d", any->to_number());
+		}
+		else if (any->is_string())
+		{
+			tb_notice("value = %s", any->to_str().c_str());
+		}
+		else if (any->is_object())
+		{
+			tb_notice("value is an object!");
+		}
+		else
+		{
+			tb_notice("value is undefined!");
+		}
+	}
+}
+
 int SrsAmf0Object::total_size()
 {
     int size = 1;
@@ -664,6 +693,71 @@ int SrsAmf0Object::read(SrsStream* stream)
     
     return ret;
 }
+
+// for pubish and play, cmdobject may be null
+int SrsAmf0Object::read2(SrsStream* stream)
+{
+    int ret = ERROR_SUCCESS;
+    
+    // marker
+    if (!stream->require(1)) {
+        ret = ERROR_RTMP_AMF0_DECODE;
+        srs_error("amf0 read object marker failed. ret=%d", ret);
+        return ret;
+    }
+    
+    char marker = stream->read_1bytes();
+    if (marker == RTMP_AMF0_Null){
+		tb_notice("cmdobject is null, standard client !");
+		return ret;
+	}
+	else if (marker != RTMP_AMF0_Object) {
+        ret = ERROR_RTMP_AMF0_DECODE;
+        srs_error("amf0 check object marker failed. "
+            "marker=%#x, required=%#x, ret=%d", marker, RTMP_AMF0_Object, ret);
+		tb_warn("amf0 check object marker failed!");
+        return ret;
+    }
+
+	tb_notice("cmdobject is object, tieba old client !");
+	
+    srs_verbose("amf0 read object marker success");
+    
+    // value
+    while (!stream->empty()) {
+        // detect whether is eof.
+        if (srs_amf0_is_object_eof(stream)) {
+            SrsAmf0ObjectEOF pbj_eof;
+            if ((ret = pbj_eof.read(stream)) != ERROR_SUCCESS) {
+                srs_error("amf0 object read eof failed. ret=%d", ret);
+                return ret;
+            }
+            srs_info("amf0 read object EOF.");
+            break;
+        }
+        
+        // property-name: utf8 string
+        std::string property_name;
+        if ((ret = srs_amf0_read_utf8(stream, property_name)) != ERROR_SUCCESS) {
+            srs_error("amf0 object read property name failed. ret=%d", ret);
+            return ret;
+        }
+        // property-value: any
+        SrsAmf0Any* property_value = NULL;
+        if ((ret = srs_amf0_read_any(stream, &property_value)) != ERROR_SUCCESS) {
+            srs_error("amf0 object read property_value failed. "
+                "name=%s, ret=%d", property_name.c_str(), ret);
+            srs_freep(property_value);
+            return ret;
+        }
+        
+        // add property
+        this->set(property_name, property_value);
+    }
+    
+    return ret;
+}
+
 
 int SrsAmf0Object::write(SrsStream* stream)
 {

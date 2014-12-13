@@ -50,7 +50,7 @@ int run_master();
 // instead, subscribe handler in initialize method.
 // kernel module.
 ISrsLog* _srs_log = new SrsFastLog();
-SrsTbLog* _tb_log = new SrsTbLog();
+ITbLog* _tb_log = new SrsTbLog();
 ISrsThreadContext* _srs_context = new SrsThreadContext();
 // app module.
 SrsConfig* _srs_config = new SrsConfig();

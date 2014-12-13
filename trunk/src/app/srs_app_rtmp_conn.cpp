@@ -77,7 +77,6 @@ using namespace std;
 const int STAT_LOG_INTERVAL = 10;
 
 extern SrsServer* _srs_server;
-extern SrsTbLog* _tb_log;
 
 SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     : SrsConnection(srs_server, client_stfd)
@@ -1226,6 +1225,6 @@ void SrsRtmpConn::http_hooks_on_stop()
 void SrsRtmpConn::stat_log()
 {
 	srs_trace("smile print stat log");
-	_tb_log->notice("tb stat log...");
+	tb_notice("tb stat log...");
 }
 

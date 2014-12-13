@@ -2714,7 +2714,7 @@ SrsPublishPacket::SrsPublishPacket()
 {
     command_name = RTMP_AMF0_COMMAND_PUBLISH;
     transaction_id = 0;
-    command_object = SrsAmf0Any::null();
+    command_object = NULL;
     type = "live";
 }
 
@@ -2749,7 +2749,9 @@ int SrsPublishPacket::decode(SrsStream* stream)
         return ret;
     }
     */
-    if ((ret = srs_amf0_read_any(stream, &command_object)) != ERROR_SUCCESS) {
+
+	/*
+	if ((ret = srs_amf0_read_any(stream, &command_object)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish command_object failed. ret=%d", ret);
         return ret;
     }
@@ -2762,7 +2764,12 @@ int SrsPublishPacket::decode(SrsStream* stream)
         srs_error("amf0 decode publish command_object is neither null nor object. ret=%d", ret);
         return ret;
     }
-    
+    */
+	if ((ret = command_object->read2(stream)) != ERROR_SUCCESS) {
+        srs_error("amf0 decode connect command_object failed. ret=%d", ret);
+        return ret;
+    }
+	
     if ((ret = srs_amf0_read_string(stream, stream_name)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish stream_name failed. ret=%d", ret);
         return ret;

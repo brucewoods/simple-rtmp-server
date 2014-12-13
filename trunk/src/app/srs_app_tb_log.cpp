@@ -75,9 +75,33 @@ string SrsIdAlloc::generate_log_id()
 	return log_id;
 }
 
+string SrsIdAlloc::generate_conn_id()
+{
+	timeval tv;
+    if (gettimeofday(&tv, NULL) == -1) {
+        return "";
+    }
+	
+	struct tm* tm;
+    if ((tm = localtime(&tv.tv_sec)) == NULL) {
+        return "";
+    }
+
+	srand((unsigned)time(0));
+	int random_num = rand()  % 1000;
+	
+    char conn_id_tmp[20];
+	sprintf(conn_id_tmp,
+           "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
+	string conn_id(conn_id_tmp);
+
+	return conn_id;
+}
+
+
 SrsTbLog::SrsTbLog()
 {
-    _level = SrsLogLevel::Notice;
+    _level = TbLogLevel::Debug;
     log_data = new char[TB_LOG_MAX_SIZE];
 
     fd = -1;
@@ -110,9 +134,29 @@ int SrsTbLog::initialize()
     return ret;
 }
 
+void SrsTbLog::debug(const char* fmt, ...)
+{
+	if (_level > TbLogLevel::Debug)
+	{
+		return;
+	}
+	int size = 0;
+    if (!generate_header("DEBUG", &size)) {
+        return;
+    }
+    
+    va_list ap;
+    va_start(ap, fmt);
+    // we reserved 1 bytes for the new line.
+    size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
+    va_end(ap);
+
+    write_log(false, log_data, size, TbLogLevel::Notice);
+}
+
 void SrsTbLog::notice(const char* fmt, ...)
 {
-	if (_level > SrsLogLevel::Notice)
+	if (_level > TbLogLevel::Notice)
 	{
 		return;
 	}
@@ -127,12 +171,12 @@ void SrsTbLog::notice(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(false, log_data, size, SrsLogLevel::Notice);
+    write_log(false, log_data, size, TbLogLevel::Notice);
 }
 
 void SrsTbLog::warn(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Warn) {
+    if (_level > TbLogLevel::Warn) {
         return;
     }
     
@@ -147,12 +191,12 @@ void SrsTbLog::warn(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Warn);
+    write_log(true, log_data, size, TbLogLevel::Warn);
 }
 
 void SrsTbLog::error(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Error) {
+    if (_level > TbLogLevel::Error) {
         return;
     }
     
@@ -167,12 +211,12 @@ void SrsTbLog::error(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Error);
+    write_log(true, log_data, size, TbLogLevel::Error);
 }
 
 void SrsTbLog::fatal(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Fatal) {
+    if (_level > TbLogLevel::Fatal) {
         return;
     }
     
@@ -187,7 +231,7 @@ void SrsTbLog::fatal(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Fatal);
+    write_log(true, log_data, size, TbLogLevel::Fatal);
 }
 
 
