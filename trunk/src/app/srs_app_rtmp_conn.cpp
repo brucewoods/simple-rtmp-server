@@ -203,8 +203,20 @@ int SrsRtmpConn::do_cycle()
                 srs_server_ip.c_str(), srs_version.c_str(), srs_pid, srs_id);
         }
     }
-    
+
+	//add stat timer
+	SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+	_srs_server->timer_manager->regist_timer(conn_stat_timer);
+	
     ret = service_cycle();
+
+	//remove stat timer
+	_srs_server->timer_manager->remove_timer(conn_stat_timer);
+	if (conn_stat_timer != NULL)
+	{
+		srs_freep(req);	
+	}
+	
     http_hooks_on_close();
     
     return ret;
@@ -286,10 +298,6 @@ int SrsRtmpConn::service_cycle()
     }
     srs_verbose("on_bw_done success");
 	tb_debug("on_bw_done success");
-
-	//add stat timer
-	SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
-	_srs_server->timer_manager->regist_timer(conn_stat_timer);
     
     while (true) {
         ret = stream_service_cycle();
@@ -342,7 +350,7 @@ int SrsRtmpConn::stream_service_cycle()
     if ((ret = rtmp->identify_client(res->stream_id, type, req->stream, req->duration)) != ERROR_SUCCESS) {
         if (!srs_is_client_gracefully_close(ret)) {
             srs_error("identify client failed. ret=%d", ret);
-			tb_error("identify client failed. ret=%d", ret);
+			tb_error("SrsRtmpConn::stream_service_cycle: identify client failed. ret=%d", ret);
         }
         return ret;
     }
