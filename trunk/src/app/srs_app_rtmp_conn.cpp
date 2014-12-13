@@ -142,13 +142,18 @@ int SrsRtmpConn::do_cycle()
     
     srs_info("discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
+	tb_debug("discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
+        req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
     
     if (req->schema.empty() || req->vhost.empty() || req->port.empty() || req->app.empty()) {
         ret = ERROR_RTMP_REQ_TCURL;
         srs_error("discovery tcUrl failed. "
             "tcUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, ret=%d",
             req->tcUrl.c_str(), req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str(), ret);
-        return ret;
+		tb_warn("discovery tcUrl failed. "
+            "tcUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, ret=%d",
+            req->tcUrl.c_str(), req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str(), ret);
+		return ret;
     }
     
     // check vhost
@@ -157,8 +162,14 @@ int SrsRtmpConn::do_cycle()
         return ret;
     }
     srs_verbose("check vhost success.");
+	tb_debug("check vhost success.");
     
     srs_trace("connect app, "
+        "tcUrl=%s, pageUrl=%s, swfUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, args=%s", 
+        req->tcUrl.c_str(), req->pageUrl.c_str(), req->swfUrl.c_str(), 
+        req->schema.c_str(), req->vhost.c_str(), req->port.c_str(),
+        req->app.c_str(), (req->args? "(obj)":"null"));
+	tb_debug("connect app, "
         "tcUrl=%s, pageUrl=%s, swfUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, args=%s", 
         req->tcUrl.c_str(), req->pageUrl.c_str(), req->swfUrl.c_str(), 
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(),
@@ -267,12 +278,14 @@ int SrsRtmpConn::service_cycle()
         return ret;
     }
     srs_verbose("response connect app success");
+	tb_debug("response connect app success");
         
     if ((ret = rtmp->on_bw_done()) != ERROR_SUCCESS) {
         srs_error("on_bw_done failed. ret=%d", ret);
         return ret;
     }
     srs_verbose("on_bw_done success");
+	tb_debug("on_bw_done success");
 
 	//add stat timer
 	SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
@@ -329,6 +342,7 @@ int SrsRtmpConn::stream_service_cycle()
     if ((ret = rtmp->identify_client(res->stream_id, type, req->stream, req->duration)) != ERROR_SUCCESS) {
         if (!srs_is_client_gracefully_close(ret)) {
             srs_error("identify client failed. ret=%d", ret);
+			tb_error("identify client failed. ret=%d", ret);
         }
         return ret;
     }
