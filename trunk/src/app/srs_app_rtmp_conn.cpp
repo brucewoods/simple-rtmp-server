@@ -127,13 +127,15 @@ int SrsRtmpConn::do_cycle()
         return ret;
     }
     srs_verbose("rtmp handshake success");
-    
+	tb_debug("rtmp handshake success");
+
     if ((ret = rtmp->connect_app(req)) != ERROR_SUCCESS) {
         srs_error("rtmp connect vhost/app failed. ret=%d", ret);
         return ret;
     }
     srs_verbose("rtmp connect app success");
-    
+    tb_debug("rtmp connect app success");
+
     // discovery vhost, resolve the vhost from config
     SrsConfDirective* parsed_vhost = _srs_config->get_vhost(req->vhost);
     if (parsed_vhost) {
@@ -214,7 +216,7 @@ int SrsRtmpConn::do_cycle()
 	_srs_server->timer_manager->remove_timer(conn_stat_timer);
 	if (conn_stat_timer != NULL)
 	{
-		srs_freep(req);	
+		srs_freep(req);
 	}
 	
     http_hooks_on_close();

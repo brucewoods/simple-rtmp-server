@@ -2749,27 +2749,25 @@ int SrsPublishPacket::decode(SrsStream* stream)
         return ret;
     }
     */
-
-	/*
-	if ((ret = srs_amf0_read_any(stream, &command_object)) != ERROR_SUCCESS) {
+	
+	SrsAmf0Any* any = NULL;
+	if ((ret = srs_amf0_read_any(stream, &any)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish command_object failed. ret=%d", ret);
         return ret;
     }
-    if (command_object->is_object()) {
-        srs_info("amf0 decode publish command_object is object, old tieba client identified.");
-    } else if (command_object->is_null()) {
-        srs_info("amf0 decode publish command_object is null, standard client identified.");
+    if (any->is_object()) {
+        tb_debug("amf0 decode publish command_object is object, old tieba client identified.");
+		command_object = any->to_object();
+	} else if (command_object->is_null()) {
+		tb_debug("amf0 decode publish command_object is null, standard client identified.");
     } else {
         ret = ERROR_RTMP_AMF0_DECODE;
         srs_error("amf0 decode publish command_object is neither null nor object. ret=%d", ret);
         return ret;
     }
-    */
-	if ((ret = command_object->read2(stream)) != ERROR_SUCCESS) {
-        srs_error("amf0 decode connect command_object failed. ret=%d", ret);
-        return ret;
-    }
-	
+
+	command_object->print_properties();
+
     if ((ret = srs_amf0_read_string(stream, stream_name)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish stream_name failed. ret=%d", ret);
         return ret;
