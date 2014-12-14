@@ -2751,23 +2751,31 @@ int SrsPublishPacket::decode(SrsStream* stream)
     */
 	
 	SrsAmf0Any* any = NULL;
-	if ((ret = srs_amf0_read_any(stream, &any)) != ERROR_SUCCESS) {
-        srs_error("amf0 decode publish command_object failed. ret=%d", ret);
+    if ((ret = SrsAmf0Any::discovery(stream, &any)) != ERROR_SUCCESS) {
+        srs_error("amf0 find connect args failed. ret=%d", ret);
         return ret;
     }
-    if (any->is_object()) {
-        tb_debug("amf0 decode publish command_object is object, old tieba client identified.");
-		command_object = any->to_object();
-	} else if (command_object->is_null()) {
-		tb_debug("amf0 decode publish command_object is null, standard client identified.");
+    srs_assert(any);
+        
+    // read the instance
+    if ((ret = any->read(stream)) != ERROR_SUCCESS) {
+       	srs_error("amf0 decode connect args failed. ret=%d", ret);
+        srs_freep(any);
+       	return ret;
+   	}
+        
+    // drop when not an AMF0 object.
+    if (!any->is_object()) {
+        srs_warn("drop the args, see: '4.1.1. connect', marker=%#x", any->marker);
+        srs_freep(any);
     } else {
-        ret = ERROR_RTMP_AMF0_DECODE;
-        srs_error("amf0 decode publish command_object is neither null nor object. ret=%d", ret);
-        return ret;
+        command_object = any->to_object();
     }
 
-	command_object->print_properties();
-
+	if (command_object != NULL){
+		command_object->print_properties();
+	}
+	
     if ((ret = srs_amf0_read_string(stream, stream_name)) != ERROR_SUCCESS) {
         srs_error("amf0 decode publish stream_name failed. ret=%d", ret);
         return ret;
