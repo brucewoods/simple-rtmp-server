@@ -178,7 +178,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
 
     srs_trace("http hook on_publish success. "
         "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-        client_id, url.c_str(), data.c_str(), res.c_str(), ret);
+        client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
     return ret;
 }
