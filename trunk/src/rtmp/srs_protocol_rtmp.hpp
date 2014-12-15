@@ -77,8 +77,8 @@ public:
 	int user_role;
 	int net_type;
 	std::string conn_id;
-	int64_t user_id;
-	int64_t group_id;
+	std::string user_id;
+	std::string group_id;
 public:
 	SrsClientInfo();
 	~SrsClientInfo();
@@ -130,6 +130,8 @@ public:
     SrsRequest();
     virtual ~SrsRequest();
 public:
+	//show client info
+	virtual void show_client_info();
     /**
     * deep copy the request, for source to use it to support reload,
     * for when initialize the source, the request is valid,

@@ -86,6 +86,8 @@ public:
     virtual int64_t get_send_bytes_delta();
     virtual int64_t get_recv_bytes_delta();
 private:
+	//store client info
+	virtual int get_client_info(int type);
     // when valid and connected to vhost/app, service the client.
     virtual int service_cycle();
     // stream(play/publish) service cycle, identify client first.

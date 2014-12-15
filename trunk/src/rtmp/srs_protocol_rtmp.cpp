@@ -76,12 +76,21 @@ SrsRequest::SrsRequest()
     objectEncoding = RTMP_SIG_AMF0_VER;
     duration = -1;
     args = NULL;
+	stream = "";
 	client_info = NULL;
 }
 
 SrsRequest::~SrsRequest()
 {
     srs_freep(args);
+}
+
+void SrsRequest::show_client_info()
+{
+	tb_debug("client info as follows:");
+	tb_debug("cliet_type=%d, client_version=%s, conn_id=%s, group_id=%s, net_type=%d, user_id=%s, user_role=%d", \
+		client_info->client_type, client_info->client_version.c_str(), client_info->conn_id.c_str(), \
+		client_info->group_id.c_str(), client_info->net_type, client_info->user_id.c_str(), client_info->user_role);
 }
 
 SrsRequest* SrsRequest::copy()

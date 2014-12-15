@@ -205,19 +205,8 @@ int SrsRtmpConn::do_cycle()
                 srs_server_ip.c_str(), srs_version.c_str(), srs_pid, srs_id);
         }
     }
-
-	//add stat timer
-	SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
-	_srs_server->timer_manager->regist_timer(conn_stat_timer);
 	
     ret = service_cycle();
-
-	//remove stat timer
-	_srs_server->timer_manager->remove_timer(conn_stat_timer);
-	if (conn_stat_timer != NULL)
-	{
-		srs_freep(req);
-	}
 	
     http_hooks_on_close();
     
@@ -302,7 +291,19 @@ int SrsRtmpConn::service_cycle()
 	tb_debug("on_bw_done success");
     
     while (true) {
+
+		//add stat timer
+		SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+		_srs_server->timer_manager->regist_timer(conn_stat_timer);
+		
         ret = stream_service_cycle();
+
+		//remove stat timer
+		_srs_server->timer_manager->remove_timer(conn_stat_timer);
+		if (conn_stat_timer != NULL)
+		{
+			srs_freep(conn_stat_timer);
+		}
         
         // stream service must terminated with error, never success.
         srs_assert(ret != ERROR_SUCCESS);
@@ -344,6 +345,56 @@ int SrsRtmpConn::service_cycle()
     }
 }
 
+int SrsRtmpConn::get_client_info(int type)
+{
+	int ret = ERROR_SUCCESS;
+	if (req->stream == "")
+	{
+		return ERROR_USER_ARGS;
+	}
+	string demi1 = "&";
+	string demi2 = "=";
+	string source_str = req->stream;
+	string::size_type begin_pos = 0;
+	string::size_type ret_pos = 0;
+	bool is_first = true;
+    while (1)
+    {
+    	if ((ret_pos = source_str.find(demi1, begin_pos)) == string::npos)
+    	{
+    		ret = ERROR_USER_ARGS;
+			break;
+		}
+		if (is_first)
+		{
+			source_str = source_str.substr(ret_pos + 1);
+			continue;
+		}
+		string item = source_str.substr(0, ret_pos - 1);
+		string::size_type pos = item.find(demi2, 0);
+		if (pos == string::npos)
+		{
+			ret = ERROR_USER_ARGS;
+			break;
+		}
+		string key = item.substr(0, pos - 1);
+		string value = item.substr(pos + 1);
+		if (key == "userId")
+		{
+			req->client_info->user_id = value;
+		}
+		else if (key == "groupId")
+		{
+			req->client_info->group_id = value;
+		}
+		req->client_info->user_role = type;
+		req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
+		
+		source_str = source_str.substr(ret_pos + 1);
+    }
+	return ret;
+}
+
 int SrsRtmpConn::stream_service_cycle()
 {
     int ret = ERROR_SUCCESS;
@@ -357,6 +408,12 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
+	if ((ret = get_client_info(type)) != ERROR_SUCCESS)
+	{
+		tb_warn("get client_info from stream name %s failed...", req->stream.c_str());
+		return ret;
+	}
+	req->show_client_info();
     srs_trace("client identified, type=%s, stream_name=%s, duration=%.2f", 
         srs_client_type_string(type).c_str(), req->stream.c_str(), req->duration);
 
