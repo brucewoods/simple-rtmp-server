@@ -128,7 +128,7 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_pause_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static void on_resume_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
 };
 
 #endif
