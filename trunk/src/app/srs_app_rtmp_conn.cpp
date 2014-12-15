@@ -88,6 +88,8 @@ SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     refer = new SrsRefer();
     bandwidth = new SrsBandwidth();
     duration = 0;
+	is_edge = false;
+	stat_timer = NULL;
     kbps = new SrsKbps();
     kbps->set_io(skt, skt);
     
@@ -294,17 +296,15 @@ int SrsRtmpConn::service_cycle()
     while (true) {
 
 		//add stat timer
-		SrsTimer* conn_stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
-		_srs_server->timer_manager->regist_timer(conn_stat_timer);
+		stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+		_srs_server->timer_manager->regist_timer(stat_timer);
 		
         ret = stream_service_cycle();
 
 		//remove stat timer
-		_srs_server->timer_manager->remove_timer(conn_stat_timer);
-		if (conn_stat_timer != NULL)
-		{
-			srs_freep(conn_stat_timer);
-		}
+		_srs_server->timer_manager->remove_timer(stat_timer);
+		
+		srs_freep(stat_timer);
         
         // stream service must terminated with error, never success.
         srs_assert(ret != ERROR_SUCCESS);
@@ -940,13 +940,19 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             
             if (dynamic_cast<SrsTbPausePublishPacket*>(pkt)) {
                 SrsTbPausePublishPacket* pause_publish = dynamic_cast<SrsTbPausePublishPacket*>(pkt);
-                // TODO: do something with pause publish
-
+            	if (stat_timer != NULL)
+            	{
+					stat_timer->pause();
+				}
+				tb_debug("client pause publish, pause stat timer!");
                 continue;
             } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
                 SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
-                // TODO: do something with resume publish
-                
+                if (stat_timer != NULL)
+            	{
+					stat_timer->resume();
+				}
+				tb_debug("client resume publish, pause resume timer!");
                 continue;
             } else {
                 // flash unpublish.
@@ -1339,8 +1345,8 @@ void SrsRtmpConn::http_hooks_on_stop()
 
 void SrsRtmpConn::stat_log()
 {
-	tb_notice("[%s client_type=%d client_version=%s user_role=%d net_type=%d conn_id=%lld user_id=%lld recv_bytes=%lld send_bytes=%lld]", \
-		TB_LOG_COMMON_ITEM.c_str(), req->client_info->client_type, req->client_info->client_version.c_str(), req->client_info->user_role, \
+	tb_notice("[logid=%d %s client_type=%d client_version=%s user_role=%d net_type=%d conn_id=%lld user_id=%lld recv_bytes=%lld send_bytes=%lld]", \
+		SrsIdAlloc::generate_log_id(), TB_LOG_COMMON_ITEM.c_str(), req->client_info->client_type, req->client_info->client_version.c_str(), req->client_info->user_role, \
 		req->client_info->net_type, req->client_info->conn_id, req->client_info->user_id, kbps->get_recv_bytes(), kbps->get_send_bytes());
 }
 
