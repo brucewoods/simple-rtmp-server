@@ -1339,7 +1339,9 @@ void SrsRtmpConn::http_hooks_on_stop()
 
 void SrsRtmpConn::stat_log()
 {
-	srs_trace("smile print stat log");
-	tb_notice("tb stat log...");
+	tb_notice("[%s client_type=%d client_version=%s user_role=%d net_type=%d conn_id=%lld user_id=%lld recv_bytes=%lld \
+		send_bytes=%lld]", TB_LOG_COMMON_ITEM.c_str(), req->client_info->client_type, req->client_info->client_version.c_str(), \
+		req->client_info->user_role, req->client_info->net_type, req->client_info->conn_id, req->client_info->user_id, \
+		kbps->get_recv_bytes(), kbps->get_send_bytes());
 }
 

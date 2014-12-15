@@ -36,9 +36,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
-const std::string TB_LOG_COMMON_ITEM = " product=tieba subsys=live module=srs ";
-const std::string TB_LOG_BODY_BEGIN = "[";
-const std::string TB_LOG_BODY_END = "]";
+const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs ";
 
 class SrsIdAlloc
 {
