@@ -126,6 +126,7 @@ int SrsRtmpConn::do_cycle()
     
     if ((ret = rtmp->handshake()) != ERROR_SUCCESS) {
         srs_error("rtmp handshake failed. ret=%d", ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=rtmp_handshake_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     srs_verbose("rtmp handshake success");
@@ -133,6 +134,7 @@ int SrsRtmpConn::do_cycle()
 
     if ((ret = rtmp->connect_app(req)) != ERROR_SUCCESS) {
         srs_error("rtmp connect vhost/app failed. ret=%d", ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=rtmp_connect_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     srs_verbose("rtmp connect app success");
@@ -1345,7 +1347,7 @@ void SrsRtmpConn::http_hooks_on_stop()
 
 void SrsRtmpConn::stat_log()
 {
-	tb_notice("[logid=%d %s client_type=%d client_version=%s user_role=%d net_type=%d conn_id=%lld user_id=%lld recv_bytes=%lld send_bytes=%lld]", \
+	tb_notice("[logid=%lld %s client_type=%d client_version=%s user_role=%d net_type=%d conn_id=%lld user_id=%lld recv_bytes=%lld send_bytes=%lld]", \
 		SrsIdAlloc::generate_log_id(), TB_LOG_COMMON_ITEM.c_str(), req->client_info->client_type, req->client_info->client_version.c_str(), req->client_info->user_role, \
 		req->client_info->net_type, req->client_info->conn_id, req->client_info->user_id, kbps->get_recv_bytes(), kbps->get_send_bytes());
 }
