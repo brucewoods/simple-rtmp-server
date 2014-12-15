@@ -354,30 +354,30 @@ int SrsRtmpConn::get_client_info(int type)
 	}
 	string demi1 = "&";
 	string demi2 = "=";
-	string source_str = req->stream;
-	string::size_type begin_pos = 0;
-	string::size_type ret_pos = 0;
+	string source_str = req->stream + demi1;
 	bool is_first = true;
-    while (1)
+	string::size_type pos = 0;
+	while (1)
     {
-    	if ((ret_pos = source_str.find(demi1, begin_pos)) == string::npos)
+    	if ((pos = source_str.find(demi1, 0)) == string::npos)
     	{
     		ret = ERROR_USER_ARGS;
 			break;
 		}
 		if (is_first)
 		{
-			source_str = source_str.substr(ret_pos + 1);
+			source_str = source_str.substr(pos + 1);
+			is_first = false;
 			continue;
 		}
-		string item = source_str.substr(0, ret_pos - 1);
-		string::size_type pos = item.find(demi2, 0);
+		string item = source_str.substr(0, pos);
+		pos = item.find(demi2, 0);
 		if (pos == string::npos)
 		{
 			ret = ERROR_USER_ARGS;
 			break;
 		}
-		string key = item.substr(0, pos - 1);
+		string key = item.substr(0, pos);
 		string value = item.substr(pos + 1);
 		if (key == "userId")
 		{
@@ -387,11 +387,13 @@ int SrsRtmpConn::get_client_info(int type)
 		{
 			req->client_info->group_id = value;
 		}
-		req->client_info->user_role = type;
-		req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
-		
 		source_str = source_str.substr(ret_pos + 1);
     }
+	if (ret == ERROR_SUCCESS)
+	{
+		req->client_info->user_role = type;
+		req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
+	}
 	return ret;
 }
 
