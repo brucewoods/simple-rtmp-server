@@ -60,7 +60,7 @@ private:
     /**
     * parse the json result and get "error" and "data" field
     */
-    static int get_res_data(const std::string &res, int& error, SrsJsonObject*& data);
+    static int get_res_data(const std::string &res, int& error, SrsJsonObject*& http_res, SrsJsonObject*& data);
 
 public:
     /**

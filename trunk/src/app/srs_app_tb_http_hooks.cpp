@@ -53,7 +53,7 @@ void SrsTbHttpHooks::append_param(std::stringstream& s, const char* key, const T
     }
 }
 
-int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& data) {
+int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& http_res, SrsJsonObject*& data) {
     int ret = ERROR_SUCCESS;
 
     if (res.empty()) {
@@ -85,7 +85,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
         srs_freep(http_res_tmp);
         return ret;
     }
-    SrsJsonObject* http_res = http_res_tmp->to_object();
+    http_res = http_res_tmp->to_object();
 
     SrsJsonAny* _error = http_res->get_property("error");
     if (!_error || !_error->is_integer()) {
@@ -142,29 +142,36 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     }
 
     int error = 0;
+
+    SrsJsonObject* http_res = NULL;
     SrsJsonObject* data = NULL;
-    if (get_res_data(res, error, data) != ERROR_SUCCESS) {
-        ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http post on_publish parse result failed. "
-            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-        srs_freep(data);
-        return ret;
-    }
-    SrsJsonAny* accept = NULL;
-    if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
-        ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http post on_publish parse result failed. "
-            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-        srs_freep(data);
-        return ret;
-    }
-    if (accept->to_integer() == 0LL) {
-        ret = ERROR_HTTP_ON_PUBLISH_AUTH_FAIL;
-        srs_error("http post on_publish authentification check failed. "
-            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+
+    try {
+        if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
+            ret = ERROR_HTTP_DATA_INVLIAD;
+            srs_error("http post on_publish parse result failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+
+            throw ret;
+        }
+        SrsJsonAny *accept = NULL;
+        if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
+            ret = ERROR_HTTP_DATA_INVLIAD;
+            srs_error("http post on_publish parse result failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ret;
+        }
+        if (accept->to_integer() == 0LL) {
+            ret = ERROR_HTTP_ON_PUBLISH_AUTH_FAIL;
+            srs_error("http post on_publish authentification check failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ret;
+        }
+    } catch (int) {
+        srs_freep(http_res);
         srs_freep(data);
         return ret;
     }
@@ -172,8 +179,11 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     SrsJsonAny* net_type = NULL;
     if ((net_type = data->get_property("net_type")) && net_type->is_integer()) {
         // TODO: write net_type to req
+    } else {
+        // TODO: write log
     }
 
+    srs_freep(http_res);
     srs_freep(data);
 
     srs_trace("http hook on_publish success. "
