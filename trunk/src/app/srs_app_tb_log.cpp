@@ -243,7 +243,7 @@ bool SrsTbLog::generate_header(const char* level_name, int* header_size)
     int log_header_size = -1;
     
     log_header_size = snprintf(log_data, TB_LOG_MAX_SIZE, 
-         "[%s]: [%d-%02d-%02d %02d:%02d:%02d] TB_LIVE ", 
+         "%s: %d-%02d-%02d %02d:%02d:%02d TB_LIVE ", 
           level_name, 1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     if (log_header_size == -1) {
