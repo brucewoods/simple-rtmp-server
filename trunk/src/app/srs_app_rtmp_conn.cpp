@@ -354,14 +354,34 @@ int SrsRtmpConn::get_client_info(int type)
 	}
 	string demi1 = "&";
 	string demi2 = "=";
-	string source_str = req->stream + demi1;
+	string source_str = req->stream;
 	bool is_first = true;
 	string::size_type pos = 0;
 	while (1)
     {
     	if ((pos = source_str.find(demi1, 0)) == string::npos)
     	{
-    		ret = ERROR_USER_ARGS;
+    		if (is_first)
+    		{
+    			ret = ERROR_USER_ARGS;
+				break;
+    		}
+			pos = source_str.find(demi2, 0);
+			if (pos == string::npos)
+			{
+				ret = ERROR_USER_ARGS;
+				break;
+			}
+			string key = source_str.substr(0, pos);
+			string value = source_str.substr(pos + 1);
+			if (key == "userId")
+			{
+				req->client_info->user_id = value;
+			}
+			else if (key == "groupId")
+			{
+				req->client_info->group_id = value;
+			}
 			break;
 		}
 		if (is_first)
@@ -371,6 +391,7 @@ int SrsRtmpConn::get_client_info(int type)
 			continue;
 		}
 		string item = source_str.substr(0, pos);
+		source_str = source_str.substr(pos + 1);
 		pos = item.find(demi2, 0);
 		if (pos == string::npos)
 		{
@@ -387,7 +408,6 @@ int SrsRtmpConn::get_client_info(int type)
 		{
 			req->client_info->group_id = value;
 		}
-		source_str = source_str.substr(ret_pos + 1);
     }
 	if (ret == ERROR_SUCCESS)
 	{
