@@ -52,50 +52,40 @@ const int TB_LOG_TAIL_SIZE = 1;
 const string TB_LOG_FILE = "logs/tb_live.log";
 const string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
 
-string SrsIdAlloc::generate_log_id()
+int64_t SrsIdAlloc::generate_log_id()
 {
 	timeval tv;
     if (gettimeofday(&tv, NULL) == -1) {
-        return "";
+        return 0;
     }
 	
 	struct tm* tm;
     if ((tm = localtime(&tv.tv_sec)) == NULL) {
-        return "";
+        return 0;
     }
 
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
-	
-    char log_id_tmp[20];
-	sprintf(log_id_tmp,
-           "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
-	string log_id(log_id_tmp);
 
-	return log_id;
+	return tm->tm_sec * 1000000 + tv.tv_usec + random_num;
 }
 
-string SrsIdAlloc::generate_conn_id()
+int64_t SrsIdAlloc::generate_conn_id()
 {
 	timeval tv;
     if (gettimeofday(&tv, NULL) == -1) {
-        return "";
+        return 0;
     }
 	
 	struct tm* tm;
     if ((tm = localtime(&tv.tv_sec)) == NULL) {
-        return "";
+        return 0;
     }
 
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
-	
-    char conn_id_tmp[20];
-	sprintf(conn_id_tmp,
-           "%4s%3s%3s", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
-	string conn_id(conn_id_tmp);
 
-	return conn_id;
+	return tm->tm_sec * 1000000 + tv.tv_usec + random_num;
 }
 
 

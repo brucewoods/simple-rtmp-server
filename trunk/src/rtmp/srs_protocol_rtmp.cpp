@@ -71,6 +71,19 @@ using namespace std;
 // default stream id for response the createStream request.
 #define SRS_DEFAULT_SID                         1
 
+SrsClientInfo::SrsClientInfo()
+{
+	client_type = E_Android;
+	client_version = "";
+	user_role = E_Player;
+	net_type = E_Wifi;
+	conn_id = user_id = group_id = 0;
+}
+
+SrsClientInfo::~SrsClientInfo()
+{
+}
+
 SrsRequest::SrsRequest()
 {
     objectEncoding = RTMP_SIG_AMF0_VER;
@@ -88,9 +101,9 @@ SrsRequest::~SrsRequest()
 void SrsRequest::show_client_info()
 {
 	tb_debug("client info as follows:");
-	tb_debug("cliet_type=%d, client_version=%s, conn_id=%s, group_id=%s, net_type=%d, user_id=%s, user_role=%d", \
-		client_info->client_type, client_info->client_version.c_str(), client_info->conn_id.c_str(), \
-		client_info->group_id.c_str(), client_info->net_type, client_info->user_id.c_str(), client_info->user_role);
+	tb_debug("cliet_type=%d, client_version=%s, conn_id=%lld, group_id=%lld, net_type=%d, user_id=%lld, user_role=%d", \
+		client_info->client_type, client_info->client_version.c_str(), client_info->conn_id, client_info->group_id, 
+		client_info->net_type, client_info->user_id, client_info->user_role);
 }
 
 SrsRequest* SrsRequest::copy()

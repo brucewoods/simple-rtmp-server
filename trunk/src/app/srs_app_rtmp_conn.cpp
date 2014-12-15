@@ -377,11 +377,11 @@ int SrsRtmpConn::get_client_info(int type)
 			string value = source_str.substr(pos + 1);
 			if (key == "userId")
 			{
-				req->client_info->user_id = value;
+				req->client_info->user_id = atoll(value.c_str());
 			}
 			else if (key == "groupId")
 			{
-				req->client_info->group_id = value;
+				req->client_info->group_id = atoll(value.c_str());
 			}
 			break;
 		}
@@ -403,11 +403,11 @@ int SrsRtmpConn::get_client_info(int type)
 		string value = item.substr(pos + 1);
 		if (key == "userId")
 		{
-			req->client_info->user_id = value;
+			req->client_info->user_id = atoll(value.c_str());
 		}
 		else if (key == "groupId")
 		{
-			req->client_info->group_id = value;
+			req->client_info->group_id = atoll(value.c_str());
 		}
     }
 	if (ret == ERROR_SUCCESS)

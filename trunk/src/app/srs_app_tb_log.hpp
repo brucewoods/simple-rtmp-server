@@ -44,8 +44,8 @@ class SrsIdAlloc
 {
 private:
 public:
-	static std::string generate_log_id();
-	static std::string generate_conn_id();
+	static int64_t generate_log_id();
+	static int64_t generate_conn_id();
 };
 
 /**

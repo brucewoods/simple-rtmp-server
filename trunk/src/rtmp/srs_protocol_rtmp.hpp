@@ -75,12 +75,12 @@ public:
 	std::string client_version;
 	int user_role;
 	int net_type;
-	std::string conn_id;
-	std::string user_id;
-	std::string group_id;
+	int64_t conn_id;
+	int64_t user_id;
+	int64_t group_id;
 public:
-	SrsClientInfo(){};
-	~SrsClientInfo(){};
+	SrsClientInfo();
+	~SrsClientInfo();
 };
 
 /**
