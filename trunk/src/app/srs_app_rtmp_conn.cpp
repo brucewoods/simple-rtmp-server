@@ -127,7 +127,8 @@ int SrsRtmpConn::do_cycle()
     if ((ret = rtmp->handshake()) != ERROR_SUCCESS) {
         srs_error("rtmp handshake failed. ret=%d", ret);
 		tb_warn("file=%s line=%d errno=%d errmsg=rtmp_handshake_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_notice("errno=%d", ret);
+		return ret;
     }
     srs_verbose("rtmp handshake success");
 	tb_debug("rtmp handshake success");
@@ -135,7 +136,8 @@ int SrsRtmpConn::do_cycle()
     if ((ret = rtmp->connect_app(req)) != ERROR_SUCCESS) {
         srs_error("rtmp connect vhost/app failed. ret=%d", ret);
 		tb_warn("file=%s line=%d errno=%d errmsg=rtmp_connect_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_notice("errno=%d", ret);
+		return ret;
     }
     srs_verbose("rtmp connect app success");
     tb_debug("rtmp connect app success");
@@ -156,20 +158,19 @@ int SrsRtmpConn::do_cycle()
         srs_error("discovery tcUrl failed. "
             "tcUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, ret=%d",
             req->tcUrl.c_str(), req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str(), ret);
-		tb_warn("discovery tcUrl failed. "
-            "tcUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, ret=%d",
-            req->tcUrl.c_str(), req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str(), ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=discovery_tcUrl_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
 		return ret;
     }
     
     // check vhost
     if ((ret = check_vhost()) != ERROR_SUCCESS) {
         srs_error("check vhost failed. ret=%d", ret);
-        return ret;
+		tb_warn("file=%s line=%d errno=%d errmsg=check_vhost_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
-    srs_verbose("check vhost success.");
-	tb_debug("check vhost success.");
-    
+
     srs_trace("connect app, "
         "tcUrl=%s, pageUrl=%s, swfUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, args=%s", 
         req->tcUrl.c_str(), req->pageUrl.c_str(), req->swfUrl.c_str(), 
@@ -250,16 +251,18 @@ int SrsRtmpConn::service_cycle()
     
     if ((ret = rtmp->set_window_ack_size((int)(2.5 * 1000 * 1000))) != ERROR_SUCCESS) {
         srs_error("set window acknowledgement size failed. ret=%d", ret);
-        return ret;
+		tb_warn("file=%s line=%d errno=%d errmsg=set_window_ack_size_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
-    srs_verbose("set window acknowledgement size success");
         
     if ((ret = rtmp->set_peer_bandwidth((int)(2.5 * 1000 * 1000), 2)) != ERROR_SUCCESS) {
         srs_error("set peer bandwidth failed. ret=%d", ret);
-        return ret;
+		tb_warn("file=%s line=%d errno=%d errmsg=set_peer_bandwidth_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
-    srs_verbose("set peer bandwidth success");
-
+	
     // get the ip which client connected.
     std::string local_ip = srs_get_local_ip(st_netfd_fileno(stfd));
     
@@ -273,28 +276,30 @@ int SrsRtmpConn::service_cycle()
     bool vhost_is_edge = _srs_config->get_vhost_is_edge(req->vhost);
     bool edge_traverse = _srs_config->get_vhost_edge_token_traverse(req->vhost);
     if (vhost_is_edge && edge_traverse) {
+		is_edge = true;
         if ((ret = check_edge_token_traverse_auth()) != ERROR_SUCCESS) {
             srs_warn("token auth failed, ret=%d", ret);
-            return ret;
+			tb_warn("file=%s line=%d errno=%d errmsg=toke_auth_failed", __FILE__, __LINE__, ret);
+			tb_notice("errno=%d", ret);
+			return ret;
         }
-		is_edge = true;
     }
     
     // response the client connect ok.
     if ((ret = rtmp->response_connect_app(req, local_ip.c_str())) != ERROR_SUCCESS) {
         srs_error("response connect app failed. ret=%d", ret);
-        return ret;
+		tb_error("file=%s line=%d errno=%d errmsg=res_connect_app_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
-    srs_verbose("response connect app success");
-	tb_debug("response connect app success");
         
     if ((ret = rtmp->on_bw_done()) != ERROR_SUCCESS) {
         srs_error("on_bw_done failed. ret=%d", ret);
-        return ret;
+		tb_error("file=%s line=%d errno=%d errmsg=on_bw_done_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
-    srs_verbose("on_bw_done success");
-	tb_debug("on_bw_done success");
-    
+	
     while (true) {
 
 		//add stat timer
@@ -439,14 +444,16 @@ int SrsRtmpConn::stream_service_cycle()
     if ((ret = rtmp->identify_client(res->stream_id, type, req->stream, req->duration)) != ERROR_SUCCESS) {
         if (!srs_is_client_gracefully_close(ret)) {
             srs_error("identify client failed. ret=%d", ret);
-			tb_error("SrsRtmpConn::stream_service_cycle: identify client failed. ret=%d", ret);
-        }
+			tb_error("file=%s line=%d errno=%d errmsg=identify_client_failed", __FILE__, __LINE__, ret);
+			tb_notice("errno=%d", ret);
+		}
         return ret;
     }
     req->strip();
 	if ((ret = get_client_info(type)) != ERROR_SUCCESS)
 	{
-		tb_warn("get client_info from stream name %s failed...", req->stream.c_str());
+		tb_warn("file=%s line=%d errno=%d errmsg=get_client_info_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
 		return ret;
 	}
 	req->show_client_info();
@@ -461,7 +468,9 @@ int SrsRtmpConn::stream_service_cycle()
     int chunk_size = _srs_config->get_chunk_size(req->vhost);
     if ((ret = rtmp->set_chunk_size(chunk_size)) != ERROR_SUCCESS) {
         srs_error("set chunk_size=%d failed. ret=%d", chunk_size, ret);
-        return ret;
+		tb_error("file=%s line=%d errno=%d errmsg=set_chunk_size_failed", __FILE__, __LINE__, ret);
+		tb_notice("errno=%d", ret);
+		return ret;
     }
     srs_info("set chunk_size=%d success", chunk_size);
     
@@ -470,6 +479,7 @@ int SrsRtmpConn::stream_service_cycle()
     // find a source to serve.
     SrsSource* source = NULL;
     if ((ret = SrsSource::find(req, &source)) != ERROR_SUCCESS) {
+		tb_notice("errno=%d", ret);
         return ret;
     }
     srs_assert(source != NULL);
@@ -482,7 +492,9 @@ int SrsRtmpConn::stream_service_cycle()
             ret = ERROR_SYSTEM_STREAM_BUSY;
             srs_warn("stream %s is already publishing. ret=%d", 
                 req->get_stream_url().c_str(), ret);
-            // to delay request
+			tb_warn("file=%s line=%d errno=%d errmsg=stream_already_published", __FILE__, __LINE__, ret);
+			tb_notice("errno=%d", ret);
+			// to delay request
             st_usleep(SRS_STREAM_BUSY_SLEEP_US);
             return ret;
         }
@@ -493,7 +505,9 @@ int SrsRtmpConn::stream_service_cycle()
         req->get_stream_url().c_str(), ip.c_str(), enabled_cache, vhost_is_edge, 
         source->source_id(), source->source_id());
     source->set_cache(enabled_cache);
-    
+
+	tb_notice("errno=%d", ERROR_SUCCESS);
+	
     switch (type) {
         case SrsRtmpConnPlay: {
             srs_verbose("start to play stream %s.", req->stream.c_str());
@@ -502,6 +516,7 @@ int SrsRtmpConn::stream_service_cycle()
                 // notice edge to start for the first client.
                 if ((ret = source->on_edge_start_play()) != ERROR_SUCCESS) {
                     srs_error("notice edge start play stream failed. ret=%d", ret);
+					tb_error("file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
                     return ret;
                 }
             }
@@ -509,14 +524,17 @@ int SrsRtmpConn::stream_service_cycle()
             // response connection start play
             if ((ret = rtmp->start_play(res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("start to play stream failed. ret=%d", ret);
+				tb_error("file=%s line=%d errno=%d errmsg=start_Play_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
             if ((ret = http_hooks_on_play()) != ERROR_SUCCESS) {
                 srs_error("http hook on_play failed. ret=%d", ret);
+				tb_error("file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
             
             srs_info("start to play stream %s success", req->stream.c_str());
+			tb_debug("start to play stream %s success", req->stream.c_str());
             ret = playing(source);
             http_hooks_on_stop();
             
@@ -633,6 +651,7 @@ int SrsRtmpConn::playing(SrsSource* source)
     
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_play(req->vhost))) != ERROR_SUCCESS) {
         srs_error("check play_refer failed. ret=%d", ret);
+		tb_error("file=%s line=%d errno=%d errmsg=check_play_refer_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     srs_verbose("check play_refer success.");
@@ -640,6 +659,7 @@ int SrsRtmpConn::playing(SrsSource* source)
     SrsConsumer* consumer = NULL;
     if ((ret = source->create_consumer(consumer)) != ERROR_SUCCESS) {
         srs_error("create consumer failed. ret=%d", ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=create_consumer_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
@@ -672,12 +692,14 @@ int SrsRtmpConn::playing(SrsSource* source)
             } else if (ret != ERROR_SUCCESS) {
                 if (!srs_is_client_gracefully_close(ret)) {
                     srs_error("recv client control message failed. ret=%d", ret);
+					tb_error("file=%s line=%d errno=%d errmsg=recv_client_control_msg_failed", __FILE__, __LINE__, ret);
                 }
                 return ret;
             } else {
                 if ((ret = process_play_control_msg(consumer, msg)) != ERROR_SUCCESS) {
                     if (!srs_is_system_control_error(ret)) {
                         srs_error("process play control message failed. ret=%d", ret);
+						tb_warn("file=%s line=%d errno=%d errmsg=process_play_control_msg_failed", __FILE__, __LINE__, ret);
                     }
                     return ret;
                 }
@@ -688,6 +710,7 @@ int SrsRtmpConn::playing(SrsSource* source)
         int count = 0;
         if ((ret = consumer->dump_packets(msgs.size, msgs.msgs, count)) != ERROR_SUCCESS) {
             srs_error("get messages from consumer failed. ret=%d", ret);
+			tb_warn("file=%s line=%d errno=%d errmsg=get_msg_from_consumer_failed", __FILE__, __LINE__, ret);
             return ret;
         }
 
@@ -726,6 +749,7 @@ int SrsRtmpConn::playing(SrsSource* source)
             // no need to assert msg, for the rtmp will assert it.
             if ((ret = rtmp->send_and_free_message(msg, res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("send message to client failed. ret=%d", ret);
+				tb_warn("file=%s line=%d errno=%d errmsg=send_msg_to_client_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
         }
@@ -736,6 +760,7 @@ int SrsRtmpConn::playing(SrsSource* source)
             if (duration >= (int64_t)req->duration) {
                 ret = ERROR_RTMP_DURATION_EXCEED;
                 srs_trace("stop live for duration exceed. ret=%d", ret);
+				tb_debug("file=%s line=%d errno=%d errmsg=stop_live_for_duration_exceed", __FILE__, __LINE__, ret);
                 return ret;
             }
         }
@@ -861,6 +886,7 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
             
     if ((ret = http_hooks_on_publish()) != ERROR_SUCCESS) {
         srs_error("http hook on_publish failed. ret=%d", ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=hook_on_publish_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
@@ -886,6 +912,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
     
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_publish(req->vhost))) != ERROR_SUCCESS) {
         srs_error("flash check publish_refer failed. ret=%d", ret);
+		tb_warn("file=%s line=%d errno=%d errmsg=check_publish_refer_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     srs_verbose("flash check publish_refer success.");
@@ -912,6 +939,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         if ((ret = rtmp->recv_message(&msg)) != ERROR_SUCCESS) {
             if (!srs_is_client_gracefully_close(ret)) {
                 srs_error("flash recv identify client message failed. ret=%d", ret);
+				tb_error("file=%s line=%d errno=%d errmsg=recv_client_identify_msg_failed", __FILE__, __LINE__, ret);
             }
             return ret;
         }
@@ -967,6 +995,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         // video, audio, data message
         if ((ret = process_publish_message(source, msg, vhost_is_edge)) != ERROR_SUCCESS) {
             srs_error("flash process publish message failed. ret=%d", ret);
+			tb_error("file=%s line=%d errno=%d errmsg=process_publish_msg_failed", __FILE__, __LINE__, ret);
             return ret;
         }
     }
