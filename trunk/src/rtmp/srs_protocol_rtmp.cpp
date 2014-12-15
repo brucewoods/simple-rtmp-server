@@ -77,7 +77,7 @@ SrsRequest::SrsRequest()
     duration = -1;
     args = NULL;
 	stream = "";
-	client_info = NULL;
+	client_info = new SrsClientInfo();
 }
 
 SrsRequest::~SrsRequest()

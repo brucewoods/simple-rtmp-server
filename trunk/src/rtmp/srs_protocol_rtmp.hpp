@@ -80,8 +80,8 @@ public:
 	std::string user_id;
 	std::string group_id;
 public:
-	SrsClientInfo();
-	~SrsClientInfo();
+	SrsClientInfo(){};
+	~SrsClientInfo(){};
 };
 
 /**
