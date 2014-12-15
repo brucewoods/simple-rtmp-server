@@ -202,15 +202,15 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
     append_param(ss, "user_id", 2);
     //append_param(ss, "identity", req->client_info->identity, true);
     append_param(ss, "identity", 1);
-    append_param(ss, "status", "close", false)
-    std::string data = ss.str();
+    append_param(ss, "status", "close", false);
+    std::string postdata = ss.str();
     std::string res;
 
     SrsHttpClient http;
-    if ((ret = http.post(&uri, data, res)) != ERROR_SUCCESS) {
+    if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), data.c_str(), res.c_str(), ret);
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
 
@@ -220,7 +220,7 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
         ret = ERROR_HTTP_DATA_INVLIAD;
         srs_error("http post on_publish parse result failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), data.c_str(), res.c_str(), ret);
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
     SrsJsonAny* accept = NULL;
@@ -228,14 +228,14 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
         ret = ERROR_HTTP_DATA_INVLIAD;
         srs_error("http post on_publish parse result failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), data.c_str(), res.c_str(), ret);
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
     if (accept->to_integer() == 0LL) {
         ret = ERROR_HTTP_ON_PUBLISH_AUTH_FAIL;
         srs_error("http post on_publish authentification check failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), data.c_str(), res.c_str(), ret);
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
 
