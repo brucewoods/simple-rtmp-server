@@ -92,7 +92,7 @@ string SrsIdAlloc::generate_conn_id()
 	
     char conn_id_tmp[20];
 	sprintf(conn_id_tmp,
-           "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
+           "%4s%3s%3s", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
 	string conn_id(conn_id_tmp);
 
 	return conn_id;

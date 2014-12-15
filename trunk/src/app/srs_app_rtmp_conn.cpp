@@ -273,6 +273,7 @@ int SrsRtmpConn::service_cycle()
             srs_warn("token auth failed, ret=%d", ret);
             return ret;
         }
+		is_edge = true;
     }
     
     // response the client connect ok.
@@ -411,7 +412,18 @@ int SrsRtmpConn::get_client_info(int type)
     }
 	if (ret == ERROR_SUCCESS)
 	{
-		req->client_info->user_role = type;
+		if (is_edge)
+		{
+			req->client_info->user_role = E_Edge;
+		}
+		else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
+		{
+			req->client_info->user_role = E_Publisher;
+		}
+		else
+		{
+			req->client_info->user_role = E_Player;
+		}
 		req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
 	}
 	return ret;
