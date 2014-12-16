@@ -50,23 +50,22 @@ class SrsAmf0Object;
 //tb user info
 enum e_client_type
 {
-	Pc = 1,
-	Android = 2,
-	Ios = 3,
+	E_Ios = 1,
+	E_Android = 2,
 };
 
 enum e_user_role
 {
-	player = 1,
-	publisher = 2,
-	edge = 3,
+	E_Player = 1,
+	E_Publisher = 2,
+	E_Edge = 3,
 };
 
 enum e_net_type
 {
-	wired = 1,
-	wifi = 2,
-	mobile = 3,
+	E_Wifi = 1,
+	E_Mobile = 2,
+	E_Wired = 3,
 };
 
 class SrsClientInfo
@@ -76,7 +75,7 @@ public:
 	std::string client_version;
 	int user_role;
 	int net_type;
-	std::string conn_id;
+	int64_t conn_id;
 	int64_t user_id;
 	int64_t group_id;
 public:
@@ -130,6 +129,8 @@ public:
     SrsRequest();
     virtual ~SrsRequest();
 public:
+	//show client info
+	virtual void show_client_info();
     /**
     * deep copy the request, for source to use it to support reload,
     * for when initialize the source, the request is valid,

@@ -36,16 +36,28 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
-const std::string TB_LOG_COMMON_ITEM = " product=tieba subsys=live module=srs ";
-const std::string TB_LOG_BODY_BEGIN = "[";
-const std::string TB_LOG_BODY_END = "]";
+// the max size of a line of log.
+const int TB_LOG_MAX_SIZE = 4096;
+
+// the tail append to each log.
+const char TB_LOG_TAIL = '\n';
+
+// reserved for the end of log data, it must be strlen(LOG_TAIL)
+const int TB_LOG_TAIL_SIZE = 1;
+
+//log file
+const std::string TB_LOG_FILE = "logs/tb_live.log";
+const std::string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
+
+
+const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs ";
 
 class SrsIdAlloc
 {
 private:
 public:
-	static std::string generate_log_id();
-	static std::string generate_conn_id();
+	static int64_t generate_log_id();
+	static int64_t generate_conn_id();
 };
 
 /**
@@ -53,7 +65,7 @@ public:
 * it's ok to use it without config, which will log to console, and default trace level.
 * when you want to use different level, override this classs, set the protected _level.
 */
-class SrsTbLog
+class SrsTbLog : public ITbLog
 {
 // for utest to override
 protected:
@@ -72,6 +84,7 @@ public:
     virtual ~SrsTbLog();
 public:
     virtual int initialize();
+	virtual void debug(const char* fmt, ...);
     virtual void notice(const char* fmt, ...);
     virtual void warn(const char* fmt, ...);
     virtual void error(const char* fmt, ...);

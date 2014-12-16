@@ -593,6 +593,35 @@ SrsAmf0Object::~SrsAmf0Object()
     srs_freep(eof);
 }
 
+void SrsAmf0Object::print_properties()
+{
+	for (int i = 0; i < properties->count(); i++) {
+        std::string name = this->key_at(i);
+		tb_debug("name = %s", name.c_str());
+        SrsAmf0Any* any = this->value_at(i);
+		if (any->is_boolean())
+		{
+			tb_debug("value = %d", any->to_number());
+		}
+		else if (any->is_number())
+		{
+			tb_debug("value = %d", any->to_number());
+		}
+		else if (any->is_string())
+		{
+			tb_debug("value = %s", any->to_str().c_str());
+		}
+		else if (any->is_object())
+		{
+			tb_debug("value is an object!");
+		}
+		else
+		{
+			tb_debug("value is undefined!");
+		}
+	}
+}
+
 int SrsAmf0Object::total_size()
 {
     int size = 1;

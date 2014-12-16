@@ -50,7 +50,7 @@ int run_master();
 // instead, subscribe handler in initialize method.
 // kernel module.
 ISrsLog* _srs_log = new SrsFastLog();
-SrsTbLog* _tb_log = new SrsTbLog();
+ITbLog* _tb_log = new SrsTbLog();
 ISrsThreadContext* _srs_context = new SrsThreadContext();
 // app module.
 SrsConfig* _srs_config = new SrsConfig();
@@ -171,16 +171,19 @@ int main(int argc, char** argv)
     // never use srs log(srs_trace, srs_error, etc) before config parse the option,
     // which will load the log config and apply it.
     if ((ret = _srs_config->parse_options(argc, argv)) != ERROR_SUCCESS) {
-        return ret;
+		tb_fatal("file=%s line=%d errno=%d errmsg=config_parse_options_failed", __FILE__, __LINE__, ret);
+		return ret;
     }
     
     // config parsed, initialize log.
     if ((ret = _srs_log->initialize()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=init_log_failed", __FILE__, __LINE__, ret);
         return ret;
     }
 
     // we check the config when the log initialized.
     if ((ret = _srs_config->check_config()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=check_config_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
@@ -214,6 +217,7 @@ int main(int argc, char** argv)
     * all initialize will done in this stage.
     */
     if ((ret = _srs_server->initialize()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=init_server_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
@@ -228,7 +232,6 @@ int run()
     }
     
     srs_trace("start deamon mode...");
-	_tb_log->notice("start deamon mode...");
     
     int pid = fork();
     
@@ -269,36 +272,44 @@ int run()
 int run_master()
 {
     int ret = ERROR_SUCCESS;
-    
+
     if ((ret = _srs_server->initialize_signal()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=server_init_signal_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->acquire_pid_file()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=acquire_pid_file_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->initialize_st()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=init_st_failed", __FILE__, __LINE__, ret);
         return ret;
     }
 
     if ((ret = _srs_server->start_timer_manager()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=start_timer_manager_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->listen()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=server_listen_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->register_signal()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=register_signal_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->ingest()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=server_ingest_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
     if ((ret = _srs_server->cycle()) != ERROR_SUCCESS) {
+		tb_fatal("file=%s line=%d errno=%d errmsg=server_cycle_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     

@@ -29,7 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <srs_core.hpp>
-
+#include <srs_app_timer.hpp>
 #include <srs_app_st.hpp>
 #include <srs_app_conn.hpp>
 #include <srs_app_reload.hpp>
@@ -69,11 +69,15 @@ private:
     // for live play duration, for instance, rtmpdump to record.
     // @see https://github.com/winlinvip/simple-rtmp-server/issues/47
     int64_t duration;
+	bool is_edge;
+	int timer_id;
     SrsKbps* kbps;
+	SrsTimer* stat_timer;
 public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
 public:
+	virtual void conn_log(int type, const char* fmt, ...);
 	virtual void stat_log();
     virtual void kbps_resample();
 protected:
@@ -86,6 +90,8 @@ public:
     virtual int64_t get_send_bytes_delta();
     virtual int64_t get_recv_bytes_delta();
 private:
+	//store client info
+	virtual int get_client_info(int type);
     // when valid and connected to vhost/app, service the client.
     virtual int service_cycle();
     // stream(play/publish) service cycle, identify client first.

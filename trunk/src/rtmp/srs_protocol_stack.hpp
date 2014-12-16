@@ -902,7 +902,7 @@ public:
     * Command information object does not exist. Set to null type.
     * @remark, not an AMF0 null instance on tieba's implementation
     */
-    SrsAmf0Any* command_object; // null
+    SrsAmf0Object* command_object;; // null
     /**
     * Name with which the stream is published.
     */

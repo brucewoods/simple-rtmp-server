@@ -39,45 +39,46 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 
-// the max size of a line of log.
-const int TB_LOG_MAX_SIZE = 4096;
-
-// the tail append to each log.
-const char TB_LOG_TAIL = '\n';
-
-// reserved for the end of log data, it must be strlen(LOG_TAIL)
-const int TB_LOG_TAIL_SIZE = 1;
-
-//log file
-const string TB_LOG_FILE = "logs/tb_live.log";
-const string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
-
-string SrsIdAlloc::generate_log_id()
+int64_t SrsIdAlloc::generate_log_id()
 {
 	timeval tv;
     if (gettimeofday(&tv, NULL) == -1) {
-        return "";
+        return 0;
     }
 	
 	struct tm* tm;
     if ((tm = localtime(&tv.tv_sec)) == NULL) {
-        return "";
+        return 0;
     }
 
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
-	
-    char log_id_tmp[20];
-	sprintf(log_id_tmp,
-           "%4d%3d%3d", tm->tm_sec, (int)(tv.tv_usec / 1000), random_num);
-	string log_id(log_id_tmp);
 
-	return log_id;
+	return (tm->tm_min * 60 + tm->tm_sec) * 1000000 + tv.tv_usec + random_num;
 }
+
+int64_t SrsIdAlloc::generate_conn_id()
+{
+	timeval tv;
+    if (gettimeofday(&tv, NULL) == -1) {
+        return 0;
+    }
+	
+	struct tm* tm;
+    if ((tm = localtime(&tv.tv_sec)) == NULL) {
+        return 0;
+    }
+
+	srand((unsigned)time(0));
+	int random_num = rand()  % 1000;
+
+	return (tm->tm_min * 60 + tm->tm_sec) * 1000000 + tv.tv_usec + random_num;
+}
+
 
 SrsTbLog::SrsTbLog()
 {
-    _level = SrsLogLevel::Notice;
+    _level = TbLogLevel::Debug;
     log_data = new char[TB_LOG_MAX_SIZE];
 
     fd = -1;
@@ -110,9 +111,29 @@ int SrsTbLog::initialize()
     return ret;
 }
 
+void SrsTbLog::debug(const char* fmt, ...)
+{
+	if (_level > TbLogLevel::Debug)
+	{
+		return;
+	}
+	int size = 0;
+    if (!generate_header("DEBUG", &size)) {
+        return;
+    }
+    
+    va_list ap;
+    va_start(ap, fmt);
+    // we reserved 1 bytes for the new line.
+    size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
+    va_end(ap);
+
+    write_log(false, log_data, size, TbLogLevel::Debug);
+}
+
 void SrsTbLog::notice(const char* fmt, ...)
 {
-	if (_level > SrsLogLevel::Notice)
+	if (_level > TbLogLevel::Notice)
 	{
 		return;
 	}
@@ -127,12 +148,12 @@ void SrsTbLog::notice(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(false, log_data, size, SrsLogLevel::Notice);
+    write_log(false, log_data, size, TbLogLevel::Notice);
 }
 
 void SrsTbLog::warn(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Warn) {
+    if (_level > TbLogLevel::Warn) {
         return;
     }
     
@@ -147,12 +168,12 @@ void SrsTbLog::warn(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Warn);
+    write_log(true, log_data, size, TbLogLevel::Warn);
 }
 
 void SrsTbLog::error(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Error) {
+    if (_level > TbLogLevel::Error) {
         return;
     }
     
@@ -167,12 +188,12 @@ void SrsTbLog::error(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Error);
+    write_log(true, log_data, size, TbLogLevel::Error);
 }
 
 void SrsTbLog::fatal(const char* fmt, ...)
 {
-    if (_level > SrsLogLevel::Fatal) {
+    if (_level > TbLogLevel::Fatal) {
         return;
     }
     
@@ -187,7 +208,7 @@ void SrsTbLog::fatal(const char* fmt, ...)
     size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
     va_end(ap);
 
-    write_log(true, log_data, size, SrsLogLevel::Fatal);
+    write_log(true, log_data, size, TbLogLevel::Fatal);
 }
 
 
@@ -209,7 +230,7 @@ bool SrsTbLog::generate_header(const char* level_name, int* header_size)
     int log_header_size = -1;
     
     log_header_size = snprintf(log_data, TB_LOG_MAX_SIZE, 
-         "[%s]: [%d-%02d-%02d %02d:%02d:%02d] TB_LIVE ", 
+         "%s: %d-%02d-%02d %02d:%02d:%02d TB_LIVE ", 
           level_name, 1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     if (log_header_size == -1) {
@@ -252,7 +273,7 @@ void SrsTbLog::write_log(bool is_except, char *str_log, int size, int level)
 			open_wf_log_file();
 		}
 
-		if (fd > 0)
+		if (wf_fd > 0)
 		{
 			::write(wf_fd, str_log, size);
 		}

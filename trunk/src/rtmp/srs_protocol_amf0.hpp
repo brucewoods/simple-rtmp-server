@@ -330,6 +330,7 @@ public:
     virtual ~SrsAmf0Object();
 // serialize/deserialize to/from stream.
 public:
+	virtual void print_properties();
     virtual int total_size();
     virtual int read(SrsStream* stream);
     virtual int write(SrsStream* stream);

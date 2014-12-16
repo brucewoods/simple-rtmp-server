@@ -796,6 +796,7 @@ int SrsServer::listen_rtmp()
         int port = ::atoi(ports[i].c_str());
         if ((ret = listener->listen(port)) != ERROR_SUCCESS) {
             srs_error("RTMP stream listen at port %d failed. ret=%d", port, ret);
+			tb_fatal("file=%s line=%d errno=%d errmsg=listen_at(%d)_failed", __FILE__, __LINE__, ret, port);
             return ret;
         }
     }
@@ -898,6 +899,7 @@ int SrsServer::accept_client(SrsListenerType type, st_netfd_t client_stfd)
         
         srs_error("exceed the max connections, drop client: "
             "clients=%d, max=%d, fd=%d", (int)conns.size(), max_connections, fd);
+		tb_warn("file=%s line=%d errno=%d errmsg=exceed_the_max_connections", __FILE__, __LINE__, ret);
             
         srs_close_stfd(client_stfd);
         
