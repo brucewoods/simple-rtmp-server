@@ -118,12 +118,14 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
         return ret;
     }
 
+    srs_assert(req->client_info);
+
     std::stringstream ss;
     append_param(ss, "method", TB_CLIVE_METHOD_CHECK_USER_INFO);
     append_param(ss, "cmd", TB_CLIVE_CMD_CHECK_USER_INFO);
-    append_param(ss, "group_id", req->client_info->group_id);
+    append_param(ss, "groupId", req->client_info->group_id);
     //append_param(ss, "group_id", 1);
-    append_param(ss, "user_id", req->client_info->user_id);
+    append_param(ss, "userId", req->client_info->user_id);
     //append_param(ss, "user_id", 2);
     append_param(ss, "identity", "publisher");
     //append_param("publishToken", req->publish_token);
@@ -206,6 +208,8 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
             "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         return ret;
     }
+
+    srs_assert(req->client_info);
 
     std::stringstream ss;
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
