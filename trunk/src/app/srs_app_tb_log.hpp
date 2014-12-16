@@ -36,6 +36,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <map>
 
+// the max size of a line of log.
+const int TB_LOG_MAX_SIZE = 4096;
+
+// the tail append to each log.
+const char TB_LOG_TAIL = '\n';
+
+// reserved for the end of log data, it must be strlen(LOG_TAIL)
+const int TB_LOG_TAIL_SIZE = 1;
+
+//log file
+const std::string TB_LOG_FILE = "logs/tb_live.log";
+const std::string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
+
+
 const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs ";
 
 class SrsIdAlloc

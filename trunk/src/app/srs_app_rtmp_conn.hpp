@@ -77,6 +77,7 @@ public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
 public:
+	virtual void conn_log(int type, const char* fmt, ...);
 	virtual void stat_log();
     virtual void kbps_resample();
 protected:
