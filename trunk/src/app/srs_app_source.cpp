@@ -25,7 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <sstream>
 #include <algorithm>
-using namespace std;
+#include <stdarg.h>
 
 #include <srs_kernel_log.hpp>
 #include <srs_protocol_stack.hpp>
@@ -41,6 +41,11 @@ using namespace std;
 #include <srs_app_edge.hpp>
 #include <srs_kernel_utility.hpp>
 #include <srs_app_avc_aac.hpp>
+#include <srs_app_tb_log.hpp>
+#include <srs_app_stat_timer.hpp>
+#include <srs_app_server.hpp>
+
+using namespace std;
 
 #define CONST_MAX_JITTER_MS         500
 #define DEFAULT_FRAME_TIME_MS         40
@@ -48,6 +53,11 @@ using namespace std;
 // for 26ms per audio packet,
 // 115 packets is 3s.
 #define __SRS_PURE_AUDIO_GUESS_COUNT 115
+
+const int GLOBAL_STAT_INTERVAL = 2;
+
+extern SrsServer* _srs_server;
+
 
 int _srs_time_jitter_string2int(std::string time_jitter)
 {
@@ -488,6 +498,37 @@ bool SrsGopCache::pure_audio()
 }
 
 std::map<std::string, SrsSource*> SrsSource::pool;
+SrsGlobalStatTimer* SrsSource::stat_timer = NULL;
+bool SrsSource::if_init = false;
+
+int SrsSource::static_init()
+{
+	if (!if_init)
+	{
+		stat_timer = new SrsGlobalStatTimer(GLOBAL_STAT_INTERVAL);
+		_srs_server->timer_manager->regist_timer(stat_timer);
+		if_init = true;
+	}
+	return 0;
+}
+void SrsSource::stat_log()
+{
+	unsigned int connection_num = 0;
+	std::map<std::string, SrsSource*>::iterator itr_map = pool.begin();
+	for (; itr_map != pool.end(); itr_map++)
+	{
+		connection_num += itr_map->second->consumers.size();
+	}
+	stringstream ss;
+	ss << "["
+		<< "logid=" << SrsIdAlloc::generate_log_id() << " "
+		<< TB_LOG_COMMON_ITEM << " "
+		<< "source_num=" << pool.size() << " "
+		<< "connection_num=" << connection_num
+		<< "]";
+	std::string str_log = ss.str();
+	tb_notice(str_log.c_str());
+}
 
 int SrsSource::find(SrsRequest* req, SrsSource** ppsource)
 {
@@ -527,6 +568,8 @@ void SrsSource::destroy()
         srs_freep(source);
     }
     pool.clear();
+	_srs_server->timer_manager->remove_timer(stat_timer);
+	srs_freep(stat_timer);
 }
 
 SrsSource::SrsSource(SrsRequest* req)
@@ -554,6 +597,7 @@ SrsSource::SrsSource(SrsRequest* req)
     publish_edge = new SrsPublishEdge();
     gop_cache = new SrsGopCache();
     aggregate_stream = new SrsStream();
+	stat_timer = NULL;
     
     _srs_config->subscribe(this);
     atc = _srs_config->get_atc(_req->vhost);

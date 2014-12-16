@@ -37,6 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_st.hpp>
 #include <srs_app_reload.hpp>
 
+class SrsGlobalStatTimer;
 class SrsPlayEdge;
 class SrsPublishEdge;
 class SrsSource;
@@ -277,7 +278,11 @@ class SrsSource : public ISrsReloadHandler
 {
 private:
     static std::map<std::string, SrsSource*> pool;
+	static SrsGlobalStatTimer* stat_timer;
+	static bool if_init;
 public:
+	static int static_init();
+	static void stat_log();
     /**
     * find stream by vhost/app/stream.
     * @param req the client request.

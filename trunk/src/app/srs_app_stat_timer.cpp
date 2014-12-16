@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include <srs_app_rtmp_conn.hpp>
 #include <srs_app_stat_timer.hpp>
+#include <srs_app_source.hpp>
 
 SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn) 
 	: SrsTimer(_interval)
@@ -37,4 +38,19 @@ void SrsConnStatTimer::callback()
 {
 	rtmp_conn->stat_log();
 }
+
+SrsGlobalStatTimer::SrsGlobalStatTimer(int _interval)
+	: SrsTimer(_interval)
+{
+}
+
+SrsGlobalStatTimer::~SrsGlobalStatTimer()
+{
+}
+
+void SrsGlobalStatTimer::callback()
+{
+	SrsSource::stat_log();
+}
+
 

@@ -77,7 +77,7 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
-const int STAT_LOG_INTERVAL = 10;
+const int STAT_LOG_INTERVAL = 5;
 
 extern SrsServer* _srs_server;
 
@@ -488,7 +488,10 @@ int SrsRtmpConn::stream_service_cycle()
     srs_info("set chunk_size=%d success", chunk_size);
     
     bool vhost_is_edge = _srs_config->get_vhost_is_edge(req->vhost);
-    
+
+	//add global timer
+	SrsSource::static_init();
+	
     // find a source to serve.
     SrsSource* source = NULL;
     if ((ret = SrsSource::find(req, &source)) != ERROR_SUCCESS) {
@@ -1434,7 +1437,7 @@ void SrsRtmpConn::conn_log(int type, const char* fmt, ...)
 		<< "user_id=" << req->client_info->user_id << " "
 		<< "group_id=" << req->client_info->group_id << " "
 		<< str_msg
-		<< "]\n";
+		<< "]";
 	string log_body = ss.str();
 	switch(type)
 	{
