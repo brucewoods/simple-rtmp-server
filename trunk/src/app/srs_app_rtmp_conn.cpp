@@ -361,7 +361,7 @@ int SrsRtmpConn::service_cycle()
 
         // for other system control message, fatal error.
         srs_error("control message(%d) reject as error. ret=%d", ret, ret);
-        http_hooks_on_error_close();
+        http_hooks_on_errorclose();
         return ret;
     }
 }
