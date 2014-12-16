@@ -324,6 +324,7 @@ int SrsRtmpConn::service_cycle()
             if (ret != ERROR_SOCKET_TIMEOUT && !srs_is_client_gracefully_close(ret)) {
                 srs_error("stream service cycle failed. ret=%d", ret);
             }
+            http_hooks_on_errorclose();
             return ret;
         }
         
@@ -357,9 +358,10 @@ int SrsRtmpConn::service_cycle()
             ret = ERROR_SUCCESS;
             return ret;
         }
-        
+
         // for other system control message, fatal error.
         srs_error("control message(%d) reject as error. ret=%d", ret, ret);
+        http_hooks_on_error_close();
         return ret;
     }
 }
@@ -1286,6 +1288,27 @@ void SrsRtmpConn::http_hooks_on_close()
         for (int i = 0; i < (int)on_close->args.size(); i++) {
             std::string url = on_close->args.at(i);
             SrsTbHttpHooks::on_close(url, connection_id, ip, req);
+        }
+    }
+#endif
+}
+
+void SrsRtmpConn::http_hooks_on_errorclose()
+{
+#ifdef SRS_AUTO_HTTP_CALLBACK
+    if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
+        // whatever the ret code, notify the api hooks.
+        // HTTP: on_close
+        SrsConfDirective* on_close = _srs_config->get_vhost_on_close(req->vhost);
+        if (!on_close) {
+            srs_info("ignore the empty http callback: on_close");
+            return;
+        }
+
+        int connection_id = _srs_context->get_id();
+        for (int i = 0; i < (int)on_close->args.size(); i++) {
+            std::string url = on_close->args.at(i);
+            SrsTbHttpHooks::on_errorclose(url, connection_id, ip, req);
         }
     }
 #endif

@@ -37,7 +37,9 @@ using namespace std;
 #define TB_CLIVE_CMD_CHECK_USER_INFO "107120"
 #define TB_CLIVE_CMD_NOTIFY_STREAM_STATUS "107121"
 
+#define TB_CLIVE_STATUS_START 1
 #define TB_CLIVE_STATUS_CLOSE 6
+#define TB_CLIVE_STATUS_ERRORCLOSE 8
 
 SrsTbHttpHooks::SrsTbHttpHooks()
 {
@@ -191,9 +193,77 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
 
     srs_freep(http_res);
 
+    //weird behavior for old client
+    ret = SrsTbHttpHooks::on_publish2(url, client_id, ip, req);
+    if (ret != ERROR_SUCCESS) {
+        return ret;
+    }
+
     srs_trace("http hook on_publish success. "
         "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
         client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+
+    return ret;
+}
+
+int SrsTbHttpHooks::on_publish2(string url, int client_id, string ip, SrsRequest* req) {
+    int ret = ERROR_SUCCESS;
+
+    SrsHttpUri uri;
+    if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
+        srs_error("http uri parse on_publish2 url failed. "
+                "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+        return ret;
+    }
+
+    srs_assert(req->client_info);
+
+    std::stringstream ss;
+    append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "groupId", req->client_info->group_id);
+    //append_param(ss, "group_id", 1);
+    append_param(ss, "userId", req->client_info->user_id);
+    //append_param(ss, "user_id", 2);
+    append_param(ss, "identity", req->client_info->user_role);
+    append_param(ss, "status", TB_CLIVE_STATUS_START, false);
+    std::string postdata = ss.str();
+    std::string res;
+
+    SrsHttpClient http;
+    if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
+        srs_error("http post on_publish2 uri failed. "
+                "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+        return ret;
+    }
+
+    int error = 0;
+    SrsJsonObject* data = NULL;
+    SrsJsonObject* http_res = NULL;
+
+    try {
+        if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
+            srs_error("http post on_publish2 parse result failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ERROR_HTTP_DATA_INVLIAD;
+        }
+        if (error != 0) {
+            srs_error("http post on_publish2 error non zero. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ERROR_HTTP_DATA_INVLIAD;
+        }
+    } catch (int r) {
+        srs_freep(http_res);
+        return (ret = r);
+    }
+
+    srs_freep(http_res);
+    srs_trace("http hook on_publish2 success. "
+            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
     return ret;
 }
@@ -203,7 +273,7 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
 
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
-        srs_error("http uri parse on_close url failed. "
+        srs_error("http uri parse on_unpublish url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         return ret;
     }
@@ -224,7 +294,7 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
 
     SrsHttpClient http;
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
-        srs_error("http post on_close uri failed. "
+        srs_error("http post on_unpublish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
@@ -253,20 +323,20 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
     }
 
     srs_freep(http_res);
-    srs_trace("http hook on_close success. "
+    srs_trace("http hook on_unpublish success. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
     return ret;
 }
 
-int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* req) {
+int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsRequest* req) {
     int ret = ERROR_SUCCESS;
 
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
-        srs_error("http uri parse on_close url failed. "
-            "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+        srs_error("http uri parse on_error_close url failed. "
+                "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         return ret;
     }
 
@@ -286,9 +356,9 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
 
     SrsHttpClient http;
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
-        srs_error("http post on_close uri failed. "
-            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+        srs_error("http post on_error_close uri failed. "
+                "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
 
@@ -298,13 +368,13 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
 
     try {
         if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
-            srs_error("http post on_publish parse result failed. "
+            srs_error("http post on_error_close parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
-            srs_error("http post on_publish error non zero. "
+            srs_error("http post on_error_close error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_DATA_INVLIAD;
@@ -315,10 +385,9 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
     }
 
     srs_freep(http_res);
-    srs_trace("http hook on_close success. "
-        "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
-        client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+    srs_trace("http hook on_error_close success. "
+            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
     return ret;
 }
-

@@ -115,6 +115,7 @@ private:
     virtual void http_hooks_on_unpublish();
     virtual int http_hooks_on_play();
     virtual void http_hooks_on_stop();
+    virtual void http_hooks_on_errorclose();
 };
 
 #endif
