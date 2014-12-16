@@ -48,6 +48,7 @@ using namespace std;
 #include <srs_app_http_hooks.hpp>
 #include <srs_app_edge.hpp>
 #include <srs_app_utility.hpp>
+#include <srs_app_tb_http_hooks.hpp>
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
 
@@ -1137,6 +1138,7 @@ int SrsRtmpConn::http_hooks_on_publish()
             srs_info("ignore the empty http callback: on_publish");
             return ret;
         }
+
         
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish->args.size(); i++) {
