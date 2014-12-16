@@ -193,6 +193,7 @@ messages.
 #define RTMP_AMF0_COMMAND_RESULT                "_result"
 #define RTMP_AMF0_COMMAND_ERROR                 "_error"
 #define RTMP_AMF0_COMMAND_RELEASE_STREAM        "releaseStream"
+#define RTMP_AMF0_COMMAND_DELETE_STREAM         "deleteStream"
 #define RTMP_AMF0_COMMAND_FC_PUBLISH            "FCPublish"
 #define RTMP_AMF0_COMMAND_UNPUBLISH             "FCUnpublish"
 #define RTMP_AMF0_COMMAND_PUBLISH               "publish"

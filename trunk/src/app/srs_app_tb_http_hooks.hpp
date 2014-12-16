@@ -99,7 +99,7 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_unpublish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_unpublish(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_play hook, when client start to play stream.
     * @param client_id the id of client on server.

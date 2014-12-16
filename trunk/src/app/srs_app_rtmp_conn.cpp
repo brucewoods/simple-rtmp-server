@@ -336,7 +336,8 @@ int SrsRtmpConn::service_cycle()
             srs_trace("control message(unpublish) accept, retry stream service.");
             continue;
         }
-        
+
+        /*
         // for "some" system control error, 
         // logical accept and retry stream service.
         if (ret == ERROR_CONTROL_RTMP_CLOSE) {
@@ -348,6 +349,13 @@ int SrsRtmpConn::service_cycle()
             
             srs_trace("control message(close) accept, retry stream service.");
             continue;
+        }
+        */
+
+        if (ret == ERROR_CONTROL_RTMP_CLOSE) {
+            srs_trace("control message(close) accept, close stream service.");
+            ret = ERROR_SUCCESS;
+            return ret;
         }
         
         // for other system control message, fatal error.
@@ -993,8 +1001,9 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             } else {
                 // flash unpublish.
                 // TODO: maybe need to support republish.
-                srs_trace("flash flash publish finished.");
-                return ERROR_CONTROL_REPUBLISH;
+                srs_trace("flash publish finished.");
+                //return ERROR_CONTROL_REPUBLISH;
+                return ERROR_CONTROL_RTMP_CLOSE;
             }
         }
 
@@ -1325,7 +1334,7 @@ void SrsRtmpConn::http_hooks_on_unpublish()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_unpublish->args.size(); i++) {
             std::string url = on_unpublish->args.at(i);
-            SrsHttpHooks::on_unpublish(url, connection_id, ip, req);
+            SrsTbHttpHooks::on_unpublish(url, connection_id, ip, req);
         }
     }
 #endif
