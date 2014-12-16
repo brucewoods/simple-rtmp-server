@@ -93,7 +93,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
         ret = ERROR_HTTP_DATA_INVLIAD;
         srs_error("http hook on_publish no error field. "
             "res=%s, ret=%d", res.c_str(), ret);
-        srs_freep(http_res_tmp);
+        //srs_freep(http_res_tmp);
         return ret;
     }
     error = (int)(_error->to_integer());
@@ -176,7 +176,6 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
         }
     } catch (int r) {
         srs_freep(http_res);
-        srs_freep(data);
         return (ret = r);
     }
 
@@ -190,7 +189,6 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     }
 
     srs_freep(http_res);
-    srs_freep(data);
 
     srs_trace("http hook on_publish success. "
         "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
