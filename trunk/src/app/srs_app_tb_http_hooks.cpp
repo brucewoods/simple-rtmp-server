@@ -32,10 +32,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 
-#define TB_IM_METHOD_CHECK_USER_INFO "checkUserInfo"
-#define TB_IM_METHOD_NOTIFY_STREAM_STATUS "notifyStreamStatus"
-#define TB_IM_CMD_CHECK_USER_INFO "107120"
-#define TB_IM_CMD_NOTIFY_STREAM_STATUS "107121"
+#define TB_CLIVE_METHOD_CHECK_USER_INFO "checkUserInfo"
+#define TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS "notifyStreamStatus"
+#define TB_CLIVE_CMD_CHECK_USER_INFO "107120"
+#define TB_CLIVE_CMD_NOTIFY_STREAM_STATUS "107121"
+
+#define TB_CLIVE_STATUS_CLOSE "6"
 
 SrsTbHttpHooks::SrsTbHttpHooks()
 {
@@ -118,8 +120,8 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     }
 
     std::stringstream ss;
-    append_param(ss, "method", TB_IM_METHOD_CHECK_USER_INFO);
-    append_param(ss, "cmd", TB_IM_CMD_CHECK_USER_INFO);
+    append_param(ss, "method", TB_CLIVE_METHOD_CHECK_USER_INFO);
+    append_param(ss, "cmd", TB_CLIVE_CMD_CHECK_USER_INFO);
     // append_param(ss, "group_id", req->client_info->group_id);
     append_param(ss, "group_id", 1);
     //append_param(ss, "user_id", req->client_info->user_id);
@@ -128,7 +130,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     //append_param("publishToken", req->publish_token);
     append_param(ss, "publishToken", "test");
     //append_param("client_type", req->client_type);
-    append_param(ss, "client_type", 3);
+    append_param(ss, "client_type", 2);
     append_param(ss, "net_type", 0, false);
     std::string postdata = ss.str();
     std::string res;
@@ -188,27 +190,27 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
 
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
-        srs_error("http uri parse on_publish url failed. "
+        srs_error("http uri parse on_close url failed. "
             "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         return ret;
     }
 
     std::stringstream ss;
-    append_param(ss, "method", TB_IM_METHOD_NOTIFY_STREAM_STATUS);
-    append_param(ss, "cmd", TB_IM_CMD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     // append_param(ss, "group_id", req->client_info->group_id);
     append_param(ss, "group_id", 1);
     //append_param(ss, "user_id", req->client_info->user_id);
     append_param(ss, "user_id", 2);
     //append_param(ss, "identity", req->client_info->identity, true);
     append_param(ss, "identity", 1);
-    append_param(ss, "status", "close", false);
+    append_param(ss, "status", TB_CLIVE_STATUS_CLOSE, false);
     std::string postdata = ss.str();
     std::string res;
 
     SrsHttpClient http;
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
-        srs_error("http post on_publish uri failed. "
+        srs_error("http post on_close uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
@@ -218,7 +220,7 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
     SrsJsonObject* data = NULL;
     if (get_res_data(res, error, data) != ERROR_SUCCESS) {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http post on_publish parse result failed. "
+        srs_error("http post on_close parse result failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
@@ -226,14 +228,14 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
     SrsJsonAny* accept = NULL;
     if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http post on_publish parse result failed. "
+        srs_error("http post on_close parse result failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
     }
     if (accept->to_integer() == 0LL) {
         ret = ERROR_HTTP_ON_PUBLISH_AUTH_FAIL;
-        srs_error("http post on_publish authentification check failed. "
+        srs_error("http post on_close authentification check failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
@@ -244,7 +246,7 @@ int SrsTbHttpHooks::on_close(string url, int client_id, string ip, SrsRequest* r
         // TODO: write net_type to req
     }
 
-    srs_trace("http hook on_publish success. "
+    srs_trace("http hook on_close success. "
         "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
         client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
