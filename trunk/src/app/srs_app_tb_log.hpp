@@ -50,7 +50,7 @@ const std::string TB_LOG_FILE = "logs/tb_live.log";
 const std::string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
 
 
-const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs ";
+const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs";
 
 class SrsIdAlloc
 {

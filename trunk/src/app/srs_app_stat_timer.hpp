@@ -27,8 +27,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "srs_app_timer.hpp"
 
 class SrsRtmpConn;
+class SrsSource;
 
-class SrsConnStatTimer : public SrsTimer{
+class SrsConnStatTimer : public SrsTimer
+{
 public:
 	SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn);
 	~SrsConnStatTimer();
@@ -36,6 +38,15 @@ public:
 	virtual void callback();
 private:
 	SrsRtmpConn* rtmp_conn;
+};
+
+class SrsGlobalStatTimer : public SrsTimer
+{
+public:
+	SrsGlobalStatTimer(int _interval);
+	~SrsGlobalStatTimer();
+	virtual void callback();
+private:
 };
 
 #endif
