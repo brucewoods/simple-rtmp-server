@@ -84,7 +84,7 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_errorclose(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_errorclose(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_publish hook, when client(encoder) start to publish stream
     * @param client_id the id of client on server.
