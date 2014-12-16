@@ -76,7 +76,7 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
-const int STAT_LOG_INTERVAL = 10;
+const int STAT_LOG_INTERVAL = 5;
 
 extern SrsServer* _srs_server;
 
