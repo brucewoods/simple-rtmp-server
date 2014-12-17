@@ -113,6 +113,8 @@ private:
     virtual void http_hooks_on_close();
     virtual int http_hooks_on_publish();
     virtual void http_hooks_on_unpublish();
+    virtual void http_hooks_on_publish_pause();
+    virtual void http_hooks_on_publish_resume();
     virtual int http_hooks_on_play();
     virtual void http_hooks_on_stop();
     virtual void http_hooks_on_errorclose();

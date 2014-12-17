@@ -574,6 +574,16 @@ public:
     */
     virtual SrsConfDirective*   get_vhost_on_unpublish(std::string vhost);
     /**
+    * get the on_publish_pause callbacks of vhost.
+    * @return the on_publish_pause callback directive, the args is the url to callback.
+    */
+    virtual SrsConfDirective*   get_vhost_on_publish_pause(std::string vhost);
+    /**
+    * get the on_publish_resume callbacks of vhost.
+    * @return the on_publish_resume callback directive, the args is the url to callback.
+    */
+    virtual SrsConfDirective*   get_vhost_on_publish_resume(std::string vhost);
+    /**
     * get the on_play callbacks of vhost.
     * @return the on_play callback directive, the args is the url to callback.
     */

@@ -129,14 +129,14 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static int on_pause_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_publish_pause(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_resume_publish hook, when client(encoder) resume paused publish stream.
     * @param client_id the id of client on server.
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static int on_resume_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_publish_resume(std::string url, int client_id, std::string ip, SrsRequest* req);
 };
 
 #endif

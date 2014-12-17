@@ -1366,6 +1366,48 @@ void SrsRtmpConn::http_hooks_on_unpublish()
 #endif
 }
 
+void SrsRtmpConn::http_hooks_on_publish_pause()
+{
+#ifdef SRS_AUTO_HTTP_CALLBACK
+    if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
+        // whatever the ret code, notify the api hooks.
+        // HTTP: on_unpublish
+        SrsConfDirective* on_publish_pause = _srs_config->get_vhost_on_publish_publish(req->vhost);
+        if (!on_publish_pause) {
+            srs_info("ignore the empty http callback: on_publish_pause");
+            return;
+        }
+
+        int connection_id = _srs_context->get_id();
+        for (int i = 0; i < (int)on_publish_pause->args.size(); i++) {
+            std::string url = on_publish_pause->args.at(i);
+            SrsTbHttpHooks::on_publish_pause(url, connection_id, ip, req);
+        }
+    }
+#endif
+}
+
+void SrsRtmpConn::http_hooks_on_publish_resume()
+{
+#ifdef SRS_AUTO_HTTP_CALLBACK
+    if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
+        // whatever the ret code, notify the api hooks.
+        // HTTP: on_unpublish
+        SrsConfDirective* on_publish_resume = _srs_config->get_vhost_on_publish_resume(req->vhost);
+        if (!on_publish_resume) {
+            srs_info("ignore the empty http callback: on_publish_resume");
+            return;
+        }
+
+        int connection_id = _srs_context->get_id();
+        for (int i = 0; i < (int)on_publish_resume->args.size(); i++) {
+            std::string url = on_publish_resume->args.at(i);
+            SrsTbHttpHooks::on_publish_resume(url, connection_id, ip, req);
+        }
+    }
+#endif
+}
+
 int SrsRtmpConn::http_hooks_on_play()
 {
     int ret = ERROR_SUCCESS;
