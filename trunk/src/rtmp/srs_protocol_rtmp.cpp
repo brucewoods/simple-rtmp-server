@@ -840,7 +840,9 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
     SrsAutoFree(SrsConnectAppPacket, pkt);
     srs_info("get connect app message");
     
-    SrsAmf0Any* prop = NULL;
+	pkt->command_object->print_properties();
+
+	SrsAmf0Any* prop = NULL;
     
     if ((prop = pkt->command_object->ensure_property_string("tcUrl")) == NULL) {
         ret = ERROR_RTMP_REQ_CONNECT;

@@ -463,13 +463,14 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
-	if ((ret = get_client_info(type)) != ERROR_SUCCESS)
+	/*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
 	{
 		conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=get_client_info_failed", __FILE__, __LINE__, ret);
 		conn_log(TbLogLevel::Notice, "errno=%d", ret);
 		return ret;
 	}
 	req->show_client_info();
+	*/
     srs_trace("client identified, type=%s, stream_name=%s, duration=%.2f", 
         srs_client_type_string(type).c_str(), req->stream.c_str(), req->duration);
 
