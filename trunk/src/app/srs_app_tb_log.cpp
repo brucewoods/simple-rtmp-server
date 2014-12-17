@@ -54,7 +54,7 @@ int64_t SrsIdAlloc::generate_log_id()
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
 
-	return (tm->tm_min * 60 + tm->tm_sec) * 1000000 + tv.tv_usec + random_num;
+	return (tm->tm_min * 60LL + tm->tm_sec) * 1000000LL + tv.tv_usec + random_num;
 }
 
 int64_t SrsIdAlloc::generate_conn_id()
@@ -72,7 +72,7 @@ int64_t SrsIdAlloc::generate_conn_id()
 	srand((unsigned)time(0));
 	int random_num = rand()  % 1000;
 
-	return (tm->tm_min * 60 + tm->tm_sec) * 1000000 + tv.tv_usec + random_num;
+	return (tm->tm_min * 60LL + tm->tm_sec) * 1000000LL + tv.tv_usec + random_num;
 }
 
 
