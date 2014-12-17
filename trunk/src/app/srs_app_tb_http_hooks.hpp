@@ -33,12 +33,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sstream>
 
-#ifdef SRS_AUTO_HTTP_CALLBACK
-
 #include <http_parser.h>
 
 class SrsHttpUri;
 class SrsRequest;
+class SrsJsonObject;
 
 /**
 * the http hooks, http callback api,
@@ -52,8 +51,17 @@ private:
 public:
     virtual ~SrsTbHttpHooks();
 private:
+    /**
+    * append a "key=value" like param(application/x-www-form-urlencoded) to s
+    */
     template<class T>
     static void append_param(std::stringstream& s, const char* key, const T &value, bool with_amp = true);
+
+    /**
+    * parse the json result and get "error" and "data" field
+    */
+    static int get_res_data(const std::string &res, int& error, SrsJsonObject*& http_res, SrsJsonObject*& data);
+
 public:
     /**
     * on_connect hook, when client connect to srs.
@@ -69,14 +77,14 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_close(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_close(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_error_close hook, when client disconnect to srs, where client is valid by on_connect.
     * @param client_id the id of client on server.
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_error_close(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_errorclose(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_publish hook, when client(encoder) start to publish stream
     * @param client_id the id of client on server.
@@ -86,12 +94,20 @@ public:
     */
     static int on_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
+    * on_publish2 hook, when client(encoder) start to publish stream
+    * @param client_id the id of client on server.
+    * @param url the api server url, to valid the client.
+    *         ignore if empty.
+    * @return valid failed or connect to the url failed.
+    */
+    static int on_publish2(std::string url, int client_id, std::string ip, SrsRequest* req);
+    /**
     * on_unpublish hook, when client(encoder) stop publish stream.
     * @param client_id the id of client on server.
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_unpublish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static int on_unpublish(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
     * on_play hook, when client start to play stream.
     * @param client_id the id of client on server.
@@ -120,9 +136,7 @@ public:
     * @param url the api server url, to process the event.
     *         ignore if empty.
     */
-    static void on_pause_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
+    static void on_resume_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
 };
-
-#endif
 
 #endif

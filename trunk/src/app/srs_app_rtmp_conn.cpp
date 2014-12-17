@@ -50,6 +50,7 @@ using namespace std;
 #include <srs_app_http_hooks.hpp>
 #include <srs_app_edge.hpp>
 #include <srs_app_utility.hpp>
+#include <srs_app_tb_http_hooks.hpp>
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
 
@@ -323,6 +324,7 @@ int SrsRtmpConn::service_cycle()
             if (ret != ERROR_SOCKET_TIMEOUT && !srs_is_client_gracefully_close(ret)) {
                 srs_error("stream service cycle failed. ret=%d", ret);
             }
+            http_hooks_on_errorclose();
             return ret;
         }
         
@@ -335,7 +337,8 @@ int SrsRtmpConn::service_cycle()
             srs_trace("control message(unpublish) accept, retry stream service.");
             continue;
         }
-        
+
+        /*
         // for "some" system control error, 
         // logical accept and retry stream service.
         if (ret == ERROR_CONTROL_RTMP_CLOSE) {
@@ -348,9 +351,17 @@ int SrsRtmpConn::service_cycle()
             srs_trace("control message(close) accept, retry stream service.");
             continue;
         }
-        
+        */
+
+        if (ret == ERROR_CONTROL_RTMP_CLOSE) {
+            srs_trace("control message(close) accept, close stream service.");
+            ret = ERROR_SUCCESS;
+            return ret;
+        }
+
         // for other system control message, fatal error.
         srs_error("control message(%d) reject as error. ret=%d", ret, ret);
+        http_hooks_on_errorclose();
         return ret;
     }
 }
@@ -995,8 +1006,9 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             } else {
                 // flash unpublish.
                 // TODO: maybe need to support republish.
-                srs_trace("flash flash publish finished.");
-                return ERROR_CONTROL_REPUBLISH;
+                srs_trace("flash publish finished.");
+                //return ERROR_CONTROL_REPUBLISH;
+                return ERROR_CONTROL_RTMP_CLOSE;
             }
         }
 
@@ -1284,6 +1296,27 @@ void SrsRtmpConn::http_hooks_on_close()
 #endif
 }
 
+void SrsRtmpConn::http_hooks_on_errorclose()
+{
+#ifdef SRS_AUTO_HTTP_CALLBACK
+    if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
+        // whatever the ret code, notify the api hooks.
+        // HTTP: on_close
+        SrsConfDirective* on_close = _srs_config->get_vhost_on_close(req->vhost);
+        if (!on_close) {
+            srs_info("ignore the empty http callback: on_close");
+            return;
+        }
+
+        int connection_id = _srs_context->get_id();
+        for (int i = 0; i < (int)on_close->args.size(); i++) {
+            std::string url = on_close->args.at(i);
+            SrsTbHttpHooks::on_errorclose(url, connection_id, ip, req);
+        }
+    }
+#endif
+}
+
 int SrsRtmpConn::http_hooks_on_publish()
 {
     int ret = ERROR_SUCCESS;
@@ -1296,11 +1329,12 @@ int SrsRtmpConn::http_hooks_on_publish()
             srs_info("ignore the empty http callback: on_publish");
             return ret;
         }
+
         
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish->args.size(); i++) {
             std::string url = on_publish->args.at(i);
-            if ((ret = SrsHttpHooks::on_publish(url, connection_id, ip, req)) != ERROR_SUCCESS) {
+            if ((ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req)) != ERROR_SUCCESS) {
                 srs_error("hook client on_publish failed. url=%s, ret=%d", url.c_str(), ret);
                 return ret;
             }
@@ -1326,7 +1360,7 @@ void SrsRtmpConn::http_hooks_on_unpublish()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_unpublish->args.size(); i++) {
             std::string url = on_unpublish->args.at(i);
-            SrsHttpHooks::on_unpublish(url, connection_id, ip, req);
+            SrsTbHttpHooks::on_unpublish(url, connection_id, ip, req);
         }
     }
 #endif
