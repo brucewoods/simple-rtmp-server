@@ -85,6 +85,7 @@ SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     : SrsConnection(srs_server, client_stfd)
 {
     req = new SrsRequest();
+	req->set_conn_id(SrsIdAlloc::generate_conn_id());
     res = new SrsResponse();
     skt = new SrsStSocket(client_stfd);
     rtmp = new SrsRtmpServer(skt);

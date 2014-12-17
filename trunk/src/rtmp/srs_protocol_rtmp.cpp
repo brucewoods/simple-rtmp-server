@@ -100,6 +100,11 @@ SrsRequest::~SrsRequest()
     srs_freep(args);
 }
 
+void SrsRequest::set_conn_id(int64_t _conn_id)
+{
+	client_info->conn_id = _conn_id;
+}
+
 void SrsRequest::show_client_info()
 {
 	tb_debug("client info as follows:");

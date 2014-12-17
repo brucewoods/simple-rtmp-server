@@ -136,6 +136,8 @@ public:
 public:
 	//show client info
 	virtual void show_client_info();
+	// set conn id
+	virtual void set_conn_id(int64_t _conn_id);
     /**
     * deep copy the request, for source to use it to support reload,
     * for when initialize the source, the request is valid,
