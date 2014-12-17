@@ -994,6 +994,8 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
 					stat_timer->pause();
 				}
 				conn_log(TbLogLevel::Debug, "client pause publish, pause stat timer!");
+
+                http_hooks_on_publish_pause();
                 continue;
             } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
                 SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
@@ -1001,6 +1003,8 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             	{
 					stat_timer->resume();
 				}
+
+                http_hooks_on_publish_resume();
 				conn_log(TbLogLevel::Debug, "client resume publish, pause resume timer!");
                 continue;
             } else {
