@@ -153,8 +153,6 @@ int SrsRtmpConn::do_cycle()
     
     srs_info("discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
-	conn_log(TbLogLevel::Debug, "discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
-        req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
     
     if (req->schema.empty() || req->vhost.empty() || req->port.empty() || req->app.empty()) {
         ret = ERROR_RTMP_REQ_TCURL;
@@ -1477,6 +1475,6 @@ void SrsRtmpConn::conn_log(int type, const char* fmt, ...)
 
 void SrsRtmpConn::stat_log()
 {
-	conn_log(TbLogLevel::Notice, "recv_bytes=%lld send_bytes=%lld", kbps->get_recv_bytes(), kbps->get_send_bytes());
+	conn_log(TbLogLevel::Notice, "recv_bytes=%lld send_bytes=%lld", get_recv_bytes_delta(), get_send_bytes_delta());
 }
 

@@ -867,16 +867,16 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
     }
 
 	//old tb client, user_info in command object
-	if ((prop = pkt->command_object->ensure_property_number("publishtoken")) != NULL) {
+	if ((prop = pkt->command_object->ensure_property_string("publishtoken")) != NULL) {
         req->client_info->publish_token = prop->to_str();
     }
 
-	if ((prop = pkt->command_object->ensure_property_number("userId")) != NULL) {
-        req->client_info->user_id = prop->to_number();
+	if ((prop = pkt->command_object->ensure_property_string("userId")) != NULL) {
+        req->client_info->user_id = atoll(prop->to_str().c_str());
     }
 
-	if ((prop = pkt->command_object->ensure_property_number("groupId")) != NULL) {
-        req->client_info->group_id = prop->to_number();
+	if ((prop = pkt->command_object->ensure_property_string("groupId")) != NULL) {
+        req->client_info->group_id = atoll(prop->to_str().c_str());
     }
 
 	if ((prop = pkt->command_object->ensure_property_number("identity")) != NULL) {
