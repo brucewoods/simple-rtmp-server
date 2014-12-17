@@ -94,14 +94,6 @@ public:
     */
     static int on_publish(std::string url, int client_id, std::string ip, SrsRequest* req);
     /**
-    * on_publish2 hook, when client(encoder) start to publish stream
-    * @param client_id the id of client on server.
-    * @param url the api server url, to valid the client.
-    *         ignore if empty.
-    * @return valid failed or connect to the url failed.
-    */
-    static int on_publish2(std::string url, int client_id, std::string ip, SrsRequest* req);
-    /**
     * on_unpublish hook, when client(encoder) stop publish stream.
     * @param client_id the id of client on server.
     * @param url the api server url, to process the event.

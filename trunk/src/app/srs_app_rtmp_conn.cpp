@@ -1268,7 +1268,7 @@ int SrsRtmpConn::http_hooks_on_connect()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_connect->args.size(); i++) {
             std::string url = on_connect->args.at(i);
-            if ((ret = SrsHttpHooks::on_connect(url, connection_id, ip, req)) != ERROR_SUCCESS) {
+            if ((ret = SrsTbHttpHooks::on_connect(url, connection_id, ip, req)) != ERROR_SUCCESS) {
                 srs_error("hook client on_connect failed. url=%s, ret=%d", url.c_str(), ret);
                 return ret;
             }

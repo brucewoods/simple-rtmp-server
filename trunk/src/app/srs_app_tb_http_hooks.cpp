@@ -112,7 +112,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
     return ret;
 }
 
-int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest* req) {
+int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest* req) {
     int ret = ERROR_SUCCESS;
 
     SrsHttpUri uri;
@@ -164,7 +164,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
             srs_error("http post on_publish error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
         SrsJsonAny *accept = NULL;
         if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
@@ -177,7 +177,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
             srs_error("http post on_publish authentification check failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_ON_PUBLISH_AUTH_FAIL;
+            throw ERROR_HTTP_ON_CONNECT_AUTH_FAIL;
         }
     } catch (int r) {
         srs_freep(http_res);
@@ -199,16 +199,10 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
-    //weird behavior for old client
-    ret = SrsTbHttpHooks::on_publish2(url, client_id, ip, req);
-    if (ret != ERROR_SUCCESS) {
-        return ret;
-    }
-
     return ret;
 }
 
-int SrsTbHttpHooks::on_publish2(string url, int client_id, string ip, SrsRequest* req) {
+int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest* req) {
     int ret = ERROR_SUCCESS;
 
     SrsHttpUri uri;
@@ -255,7 +249,7 @@ int SrsTbHttpHooks::on_publish2(string url, int client_id, string ip, SrsRequest
             srs_error("http post on_publish2 error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
         srs_freep(http_res);
@@ -317,7 +311,7 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
             srs_error("http post on_unpublish error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
         srs_freep(http_res);
@@ -379,7 +373,7 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
             srs_error("http post on_error_close error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
         srs_freep(http_res);
@@ -441,7 +435,7 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
             srs_error("http post on_publish_pause error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
         srs_freep(http_res);
@@ -503,7 +497,7 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
             srs_error("http post on_publish_resume error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+            throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
         srs_freep(http_res);
