@@ -1282,6 +1282,7 @@ int SrsRtmpConn::http_hooks_on_connect()
 void SrsRtmpConn::http_hooks_on_close()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+/*
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_close 
@@ -1297,6 +1298,7 @@ void SrsRtmpConn::http_hooks_on_close()
             SrsHttpHooks::on_close(url, connection_id, ip, req);
         }
     }
+*/
 #endif
 }
 
