@@ -1372,7 +1372,7 @@ void SrsRtmpConn::http_hooks_on_publish_pause()
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish
-        SrsConfDirective* on_publish_pause = _srs_config->get_vhost_on_publish_publish(req->vhost);
+        SrsConfDirective* on_publish_pause = _srs_config->get_vhost_on_publish(req->vhost);
         if (!on_publish_pause) {
             srs_info("ignore the empty http callback: on_publish_pause");
             return;
