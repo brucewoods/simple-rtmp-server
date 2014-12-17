@@ -77,6 +77,7 @@ class SrsClientInfo
 public:
 	int client_type;
 	std::string client_version;
+	std::string publish_token;
 	int user_role;
 	int net_type;
 	int64_t conn_id;

@@ -75,6 +75,7 @@ SrsClientInfo::SrsClientInfo()
 {
 	client_type = E_Android;
 	client_version = "";
+	publish_token = "";
 	user_role = E_Player;
 	net_type = E_Wifi;
 	conn_id = user_id = group_id = 0;
@@ -95,15 +96,16 @@ SrsRequest::SrsRequest()
 
 SrsRequest::~SrsRequest()
 {
+	srs_freep(client_info);
     srs_freep(args);
 }
 
 void SrsRequest::show_client_info()
 {
 	tb_debug("client info as follows:");
-	tb_debug("cliet_type=%d, client_version=%s, conn_id=%lld, group_id=%lld, net_type=%d, user_id=%lld, user_role=%d", \
+	tb_debug("cliet_type=%d, client_version=%s, conn_id=%lld, group_id=%lld, net_type=%d, user_id=%lld, user_role=%d, publish_token=%s", \
 		client_info->client_type, client_info->client_version.c_str(), client_info->conn_id, client_info->group_id, 
-		client_info->net_type, client_info->user_id, client_info->user_role);
+		client_info->net_type, client_info->user_id, client_info->user_role, client_info->publish_token.c_str());
 }
 
 SrsRequest* SrsRequest::copy()
@@ -122,6 +124,7 @@ SrsRequest* SrsRequest::copy()
     cp->tcUrl = tcUrl;
     cp->vhost = vhost;
     cp->duration = duration;
+	cp->client_info = client_info;
     if (args) {
         cp->args = args->copy()->to_object();
     }
@@ -862,7 +865,24 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
     if ((prop = pkt->command_object->ensure_property_number("objectEncoding")) != NULL) {
         req->objectEncoding = prop->to_number();
     }
-    
+
+	//old tb client, user_info in command object
+	if ((prop = pkt->command_object->ensure_property_number("publishtoken")) != NULL) {
+        req->client_info->publish_token = prop->to_str();
+    }
+
+	if ((prop = pkt->command_object->ensure_property_number("userId")) != NULL) {
+        req->client_info->user_id = prop->to_number();
+    }
+
+	if ((prop = pkt->command_object->ensure_property_number("groupId")) != NULL) {
+        req->client_info->group_id = prop->to_number();
+    }
+
+	if ((prop = pkt->command_object->ensure_property_number("identity")) != NULL) {
+        req->client_info->user_role = prop->to_number();
+    }
+	
     if (pkt->args) {
         srs_freep(req->args);
         req->args = pkt->args->copy()->to_object();
