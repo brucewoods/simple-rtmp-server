@@ -511,7 +511,7 @@ int SrsSource::static_init()
 	}
 	return 0;
 }
-void SrsSource::stat_log()
+void SrsSource::global_stat()
 {
 	unsigned int connection_num = 0;
 	std::map<std::string, SrsSource*>::iterator itr_map = pool.begin();
@@ -519,15 +519,7 @@ void SrsSource::stat_log()
 	{
 		connection_num += itr_map->second->consumers.size();
 	}
-	stringstream ss;
-	ss << "["
-		<< "logid=" << SrsIdAlloc::generate_log_id() << " "
-		<< TB_LOG_COMMON_ITEM << " "
-		<< "source_num=" << pool.size() << " "
-		<< "connection_num=" << connection_num
-		<< "]";
-	std::string str_log = ss.str();
-	tb_notice(str_log.c_str());
+	_tb_log->global_log(TbLogLevel::Notice, "source_num=%d connection_num=%d", pool.size(), connection_num);
 }
 
 int SrsSource::find(SrsRequest* req, SrsSource** ppsource)

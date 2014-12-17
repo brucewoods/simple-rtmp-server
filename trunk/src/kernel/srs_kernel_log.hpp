@@ -31,7 +31,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_core.hpp>
 
 #include <stdio.h>
-
+#include <string>
 #include <errno.h>
 #include <string.h>
 
@@ -117,6 +117,8 @@ public:
 	static const int Error = 0x04;
 	static const int Fatal = 0x05;
 };
+
+class SrsRequest;
 class ITbLog
 {
 public:
@@ -129,6 +131,8 @@ public:
     virtual void warn(const char* fmt, ...) = 0;
     virtual void error(const char* fmt, ...) = 0;
     virtual void fatal(const char* fmt, ...) = 0;
+	virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...) = 0;
+	virtual void global_log(int log_level, const char* fmt, ...) = 0;
 };
 
 // user must provides a log object

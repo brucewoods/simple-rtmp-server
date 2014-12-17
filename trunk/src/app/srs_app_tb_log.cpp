@@ -34,6 +34,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_kernel_error.hpp>
 #include <srs_app_utility.hpp>
 #include <srs_kernel_utility.hpp>
+#include <srs_protocol_rtmp.hpp>
 
 #include <stdlib.h>
 
@@ -211,6 +212,116 @@ void SrsTbLog::fatal(const char* fmt, ...)
     write_log(true, log_data, size, TbLogLevel::Fatal);
 }
 
+void SrsTbLog::conn_log(int log_level, string log_type, SrsRequest* req, const char * fmt,...)
+{
+	char msg[TB_LOG_MAX_SIZE] = "";
+	va_list ap;
+    va_start(ap, fmt);
+    // we reserved 1 bytes for the new line.
+    int real_size = vsnprintf(msg, TB_LOG_MAX_SIZE, fmt, ap);
+	string str_msg(msg, real_size);
+    va_end(ap);
+	stringstream ss;
+	ss << "["
+		<< "logid=" << SrsIdAlloc::generate_log_id() << " "
+		<< TB_LOG_COMMON_ITEM << " "
+		<< "log_type=" << log_type << " "
+		<< "client_type=" << req->client_info->client_type << " "
+		<< "client_version=" << req->client_info->client_version << " " 
+		<< "user_role=" << req->client_info->user_role << " "
+		<< "net_type=" << req->client_info->net_type << " "
+		<< "conn_id=" << req->client_info->conn_id << " "
+		<< "user_id=" << req->client_info->user_id << " "
+		<< "group_id=" << req->client_info->group_id << " "
+		<< str_msg
+		<< "]";
+	string log_body = ss.str();
+	switch(log_level)
+	{
+		case TbLogLevel::Debug:
+		{
+			tb_debug(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Notice:
+		{
+			tb_notice(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Warn:
+		{
+			tb_warn(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Error:
+		{
+			tb_error(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Fatal:
+		{
+			tb_fatal(log_body.c_str());
+			break;
+		}
+		default:
+		{
+			tb_warn("wrong log type!");
+		}
+	}
+	return;	
+}
+
+void SrsTbLog::global_log(int log_level,const char * fmt,...)
+{
+	char msg[TB_LOG_MAX_SIZE] = "";
+	va_list ap;
+    va_start(ap, fmt);
+    // we reserved 1 bytes for the new line.
+    int real_size = vsnprintf(msg, TB_LOG_MAX_SIZE, fmt, ap);
+	string str_msg(msg, real_size);
+    va_end(ap);
+	stringstream ss;
+	ss << "["
+		<< "logid=" << SrsIdAlloc::generate_log_id() << " "
+		<< TB_LOG_COMMON_ITEM << " "
+		<< "log_type=" << LOGTYPE_GLOBAL_STAT << " "
+		<< str_msg
+		<< "]";
+	string log_body = ss.str();
+	switch(log_level)
+	{
+		case TbLogLevel::Debug:
+		{
+			tb_debug(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Notice:
+		{
+			tb_notice(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Warn:
+		{
+			tb_warn(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Error:
+		{
+			tb_error(log_body.c_str());
+			break;
+		}
+		case TbLogLevel::Fatal:
+		{
+			tb_fatal(log_body.c_str());
+			break;
+		}
+		default:
+		{
+			tb_warn("wrong log type!");
+		}
+	}
+	return;	
+}
 
 bool SrsTbLog::generate_header(const char* level_name, int* header_size)
 {

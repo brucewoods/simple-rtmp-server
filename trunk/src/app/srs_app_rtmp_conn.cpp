@@ -77,7 +77,7 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
-const int STAT_LOG_INTERVAL = 5;
+const int STAT_LOG_INTERVAL = 10;
 
 extern SrsServer* _srs_server;
 
@@ -130,21 +130,21 @@ int SrsRtmpConn::do_cycle()
     
     if ((ret = rtmp->handshake()) != ERROR_SUCCESS) {
         srs_error("rtmp handshake failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=rtmp_handshake_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=rtmp_handshake_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
     srs_verbose("rtmp handshake success");
-	conn_log(TbLogLevel::Debug, "rtmp handshake success");
+	tb_debug("rtmp handshake success");
 
     if ((ret = rtmp->connect_app(req)) != ERROR_SUCCESS) {
         srs_error("rtmp connect vhost/app failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=rtmp_connect_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=rtmp_connect_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
     srs_verbose("rtmp connect app success");
-    conn_log(TbLogLevel::Debug, "rtmp connect app success");
+    tb_debug("rtmp connect app success");
 
     // discovery vhost, resolve the vhost from config
     SrsConfDirective* parsed_vhost = _srs_config->get_vhost(req->vhost);
@@ -160,16 +160,16 @@ int SrsRtmpConn::do_cycle()
         srs_error("discovery tcUrl failed. "
             "tcUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, ret=%d",
             req->tcUrl.c_str(), req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str(), ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=discovery_tcUrl_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=discovery_tcUrl_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
     
     // check vhost
     if ((ret = check_vhost()) != ERROR_SUCCESS) {
         srs_error("check vhost failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=check_vhost_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=check_vhost_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
 
@@ -178,7 +178,7 @@ int SrsRtmpConn::do_cycle()
         req->tcUrl.c_str(), req->pageUrl.c_str(), req->swfUrl.c_str(), 
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(),
         req->app.c_str(), (req->args? "(obj)":"null"));
-	conn_log(TbLogLevel::Debug, "connect app, "
+	tb_debug("connect app, "
         "tcUrl=%s, pageUrl=%s, swfUrl=%s, schema=%s, vhost=%s, port=%s, app=%s, args=%s", 
         req->tcUrl.c_str(), req->pageUrl.c_str(), req->swfUrl.c_str(), 
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(),
@@ -253,15 +253,15 @@ int SrsRtmpConn::service_cycle()
     
     if ((ret = rtmp->set_window_ack_size((int)(2.5 * 1000 * 1000))) != ERROR_SUCCESS) {
         srs_error("set window acknowledgement size failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=set_window_ack_size_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=set_window_ack_size_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
         
     if ((ret = rtmp->set_peer_bandwidth((int)(2.5 * 1000 * 1000), 2)) != ERROR_SUCCESS) {
         srs_error("set peer bandwidth failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=set_peer_bandwidth_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=set_peer_bandwidth_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
 	
@@ -281,8 +281,8 @@ int SrsRtmpConn::service_cycle()
 		is_edge = true;
         if ((ret = check_edge_token_traverse_auth()) != ERROR_SUCCESS) {
             srs_warn("token auth failed, ret=%d", ret);
-			conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=toke_auth_failed", __FILE__, __LINE__, ret);
-			conn_log(TbLogLevel::Notice, "errno=%d", ret);
+			_tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=toke_auth_failed", __FILE__, __LINE__, ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 			return ret;
         }
     }
@@ -290,15 +290,15 @@ int SrsRtmpConn::service_cycle()
     // response the client connect ok.
     if ((ret = rtmp->response_connect_app(req, local_ip.c_str())) != ERROR_SUCCESS) {
         srs_error("response connect app failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=res_connect_app_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=res_connect_app_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
         
     if ((ret = rtmp->on_bw_done()) != ERROR_SUCCESS) {
         srs_error("on_bw_done failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=on_bw_done_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=on_bw_done_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
 	
@@ -456,8 +456,8 @@ int SrsRtmpConn::stream_service_cycle()
     if ((ret = rtmp->identify_client(res->stream_id, type, req->stream, req->duration)) != ERROR_SUCCESS) {
         if (!srs_is_client_gracefully_close(ret)) {
             srs_error("identify client failed. ret=%d", ret);
-			conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=identify_client_failed", __FILE__, __LINE__, ret);
-			conn_log(TbLogLevel::Notice, "errno=%d", ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=identify_client_failed", __FILE__, __LINE__, ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		}
         return ret;
     }
@@ -481,8 +481,8 @@ int SrsRtmpConn::stream_service_cycle()
     int chunk_size = _srs_config->get_chunk_size(req->vhost);
     if ((ret = rtmp->set_chunk_size(chunk_size)) != ERROR_SUCCESS) {
         srs_error("set chunk_size=%d failed. ret=%d", chunk_size, ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=set_chunk_size_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=set_chunk_size_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 		return ret;
     }
     srs_info("set chunk_size=%d success", chunk_size);
@@ -495,8 +495,8 @@ int SrsRtmpConn::stream_service_cycle()
     // find a source to serve.
     SrsSource* source = NULL;
     if ((ret = SrsSource::find(req, &source)) != ERROR_SUCCESS) {
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=find_source_failed", __FILE__, __LINE__, ret);
-		conn_log(TbLogLevel::Notice, "errno=%d", ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=find_source_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
         return ret;
     }
     srs_assert(source != NULL);
@@ -509,8 +509,8 @@ int SrsRtmpConn::stream_service_cycle()
             ret = ERROR_SYSTEM_STREAM_BUSY;
             srs_warn("stream %s is already publishing. ret=%d", 
                 req->get_stream_url().c_str(), ret);
-			conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=stream_already_published", __FILE__, __LINE__, ret);
-			conn_log(TbLogLevel::Notice, "errno=%d", ret);
+			_tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=stream_already_published", __FILE__, __LINE__, ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
 			// to delay request
             st_usleep(SRS_STREAM_BUSY_SLEEP_US);
             return ret;
@@ -523,7 +523,7 @@ int SrsRtmpConn::stream_service_cycle()
         source->source_id(), source->source_id());
     source->set_cache(enabled_cache);
 
-	conn_log(TbLogLevel::Notice, "errno=%d", ERROR_SUCCESS);
+	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ERROR_SUCCESS);
 	
     switch (type) {
         case SrsRtmpConnPlay: {
@@ -533,7 +533,7 @@ int SrsRtmpConn::stream_service_cycle()
                 // notice edge to start for the first client.
                 if ((ret = source->on_edge_start_play()) != ERROR_SUCCESS) {
                     srs_error("notice edge start play stream failed. ret=%d", ret);
-					conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
+					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
                     return ret;
                 }
             }
@@ -541,17 +541,17 @@ int SrsRtmpConn::stream_service_cycle()
             // response connection start play
             if ((ret = rtmp->start_play(res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("start to play stream failed. ret=%d", ret);
-				conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
             if ((ret = http_hooks_on_play()) != ERROR_SUCCESS) {
                 srs_error("http hook on_play failed. ret=%d", ret);
-				conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
             
             srs_info("start to play stream %s success", req->stream.c_str());
-			conn_log(TbLogLevel::Debug, "start to play stream %s success", req->stream.c_str());
+			tb_debug("start to play stream %s success", req->stream.c_str());
             ret = playing(source);
             http_hooks_on_stop();
             
@@ -592,14 +592,14 @@ int SrsRtmpConn::stream_service_cycle()
             if (vhost_is_edge) {
                 if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
                     srs_error("notice edge start publish stream failed. ret=%d", ret);
-					conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
+					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
                     return ret;
                 }
             }
             
             if ((ret = rtmp->start_flash_publish(res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("flash start to publish stream failed. ret=%d", ret);
-				conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
                 return ret;
             }
             
@@ -905,7 +905,7 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
             
     if ((ret = http_hooks_on_publish()) != ERROR_SUCCESS) {
         srs_error("http hook on_publish failed. ret=%d", ret);
-		conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=hook_on_publish_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=hook_on_publish_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     
@@ -931,7 +931,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
     
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_publish(req->vhost))) != ERROR_SUCCESS) {
         srs_error("flash check publish_refer failed. ret=%d", ret);
-		conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=check_publish_refer_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=check_publish_refer_failed", __FILE__, __LINE__, ret);
         return ret;
     }
     srs_verbose("flash check publish_refer success.");
@@ -958,7 +958,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         if ((ret = rtmp->recv_message(&msg)) != ERROR_SUCCESS) {
             if (!srs_is_client_gracefully_close(ret)) {
                 srs_error("flash recv identify client message failed. ret=%d", ret);
-				conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=recv_client_identify_msg_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=recv_client_identify_msg_failed", __FILE__, __LINE__, ret);
             }
             return ret;
         }
@@ -993,7 +993,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
             	{
 					stat_timer->pause();
 				}
-				conn_log(TbLogLevel::Debug, "client pause publish, pause stat timer!");
+				tb_debug("client pause publish, pause stat timer!");
 
                 http_hooks_on_publish_pause();
                 continue;
@@ -1005,7 +1005,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
 				}
 
                 http_hooks_on_publish_resume();
-				conn_log(TbLogLevel::Debug, "client resume publish, pause resume timer!");
+				tb_debug("client resume publish, pause resume timer!");
                 continue;
             } else {
                 // flash unpublish.
@@ -1019,7 +1019,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         // video, audio, data message
         if ((ret = process_publish_message(source, msg, vhost_is_edge)) != ERROR_SUCCESS) {
             srs_error("flash process publish message failed. ret=%d", ret);
-			conn_log(TbLogLevel::Error, "file=%s line=%d errno=%d errmsg=process_publish_msg_failed", __FILE__, __LINE__, ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=process_publish_msg_failed", __FILE__, __LINE__, ret);
             return ret;
         }
     }
@@ -1270,7 +1270,8 @@ int SrsRtmpConn::http_hooks_on_connect()
             std::string url = on_connect->args.at(i);
             if ((ret = SrsTbHttpHooks::on_connect(url, connection_id, ip, req)) != ERROR_SUCCESS) {
                 srs_error("hook client on_connect failed. url=%s, ret=%d", url.c_str(), ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=connect url=%s errno=%d", url.c_str(), ret);
+				return ret;
             }
         }
     }
@@ -1317,7 +1318,8 @@ void SrsRtmpConn::http_hooks_on_errorclose()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_close->args.size(); i++) {
             std::string url = on_close->args.at(i);
-            SrsTbHttpHooks::on_errorclose(url, connection_id, ip, req);
+            int ret = SrsTbHttpHooks::on_errorclose(url, connection_id, ip, req);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=errorClose url=%s errno=%d", url.c_str(), ret);
         }
     }
 #endif
@@ -1342,7 +1344,8 @@ int SrsRtmpConn::http_hooks_on_publish()
             std::string url = on_publish->args.at(i);
             if ((ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req)) != ERROR_SUCCESS) {
                 srs_error("hook client on_publish failed. url=%s, ret=%d", url.c_str(), ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish url=%s errno=%d", url.c_str(), ret);
+				return ret;
             }
         }
     }
@@ -1366,7 +1369,8 @@ void SrsRtmpConn::http_hooks_on_unpublish()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_unpublish->args.size(); i++) {
             std::string url = on_unpublish->args.at(i);
-            SrsTbHttpHooks::on_unpublish(url, connection_id, ip, req);
+            int ret = SrsTbHttpHooks::on_unpublish(url, connection_id, ip, req);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=unpublish url=%s errno=%d", url.c_str(), ret);
         }
     }
 #endif
@@ -1387,7 +1391,8 @@ void SrsRtmpConn::http_hooks_on_publish_pause()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish_pause->args.size(); i++) {
             std::string url = on_publish_pause->args.at(i);
-            SrsTbHttpHooks::on_publish_pause(url, connection_id, ip, req);
+            int ret = SrsTbHttpHooks::on_publish_pause(url, connection_id, ip, req);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=pausePublish url=%s errno=%d", url.c_str(), ret);
         }
     }
 #endif
@@ -1408,8 +1413,9 @@ void SrsRtmpConn::http_hooks_on_publish_resume()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish_resume->args.size(); i++) {
             std::string url = on_publish_resume->args.at(i);
-            SrsTbHttpHooks::on_publish_resume(url, connection_id, ip, req);
-        }
+            int ret = SrsTbHttpHooks::on_publish_resume(url, connection_id, ip, req);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=resumePublish url=%s errno=%d", url.c_str(), ret);
+		}
     }
 #endif
 }
@@ -1432,7 +1438,8 @@ int SrsRtmpConn::http_hooks_on_play()
             std::string url = on_play->args.at(i);
             if ((ret = SrsHttpHooks::on_play(url, connection_id, ip, req)) != ERROR_SUCCESS) {
                 srs_error("hook client on_play failed. url=%s, ret=%d", url.c_str(), ret);
-                return ret;
+				//conn_log(TbLogLevel::Notice, "action=play url=%s errno=%d", url.c_str(), ret);
+				return ret;
             }
         }
     }
@@ -1464,66 +1471,4 @@ void SrsRtmpConn::http_hooks_on_stop()
     return;
 }
 
-void SrsRtmpConn::conn_log(int type, const char* fmt, ...)
-{
-	char msg[TB_LOG_MAX_SIZE] = "";
-	va_list ap;
-    va_start(ap, fmt);
-    // we reserved 1 bytes for the new line.
-    int real_size = vsnprintf(msg, TB_LOG_MAX_SIZE, fmt, ap);
-	string str_msg(msg, real_size);
-    va_end(ap);
-	stringstream ss;
-	ss << "["
-		<< "logid=" << SrsIdAlloc::generate_log_id() << " "
-		<< TB_LOG_COMMON_ITEM << " "
-		<< "client_type=" << req->client_info->client_type << " "
-		<< "client_version=" << req->client_info->client_version << " " 
-		<< "user_role=" << req->client_info->user_role << " "
-		<< "net_type=" << req->client_info->net_type << " "
-		<< "conn_id=" << req->client_info->conn_id << " "
-		<< "user_id=" << req->client_info->user_id << " "
-		<< "group_id=" << req->client_info->group_id << " "
-		<< str_msg
-		<< "]";
-	string log_body = ss.str();
-	switch(type)
-	{
-		case TbLogLevel::Debug:
-		{
-			tb_debug(log_body.c_str());
-			break;
-		}
-		case TbLogLevel::Notice:
-		{
-			tb_notice(log_body.c_str());
-			break;
-		}
-		case TbLogLevel::Warn:
-		{
-			tb_warn(log_body.c_str());
-			break;
-		}
-		case TbLogLevel::Error:
-		{
-			tb_error(log_body.c_str());
-			break;
-		}
-		case TbLogLevel::Fatal:
-		{
-			tb_fatal(log_body.c_str());
-			break;
-		}
-		default:
-		{
-			tb_warn("wrong log type!");
-		}
-	}
-	return;	
-}
-
-void SrsRtmpConn::stat_log()
-{
-	conn_log(TbLogLevel::Notice, "recv_bytes=%lld send_bytes=%lld", get_recv_bytes_delta(), get_send_bytes_delta());
-}
 

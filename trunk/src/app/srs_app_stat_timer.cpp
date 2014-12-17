@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_rtmp_conn.hpp>
 #include <srs_app_stat_timer.hpp>
 #include <srs_app_source.hpp>
+#include <srs_app_tb_log.hpp>
 
 SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn) 
 	: SrsTimer(_interval)
@@ -36,7 +37,8 @@ SrsConnStatTimer::~SrsConnStatTimer()
 
 void SrsConnStatTimer::callback()
 {
-	rtmp_conn->stat_log();
+	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_STREAM_STABILITY, rtmp_conn->get_req(), "recv_bytes=%lld \
+		send_bytes=%lld", rtmp_conn->get_recv_bytes_delta(), rtmp_conn->get_send_bytes_delta());
 }
 
 SrsGlobalStatTimer::SrsGlobalStatTimer(int _interval)
@@ -50,7 +52,7 @@ SrsGlobalStatTimer::~SrsGlobalStatTimer()
 
 void SrsGlobalStatTimer::callback()
 {
-	SrsSource::stat_log();
+	SrsSource::global_stat();
 }
 
 

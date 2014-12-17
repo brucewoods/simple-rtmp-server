@@ -51,6 +51,11 @@ const std::string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
 
 
 const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs";
+const std::string LOGTYPE_HOOK = "callback";
+const std::string LOGTYPE_CREATE_STREAM = "create_stream";
+const std::string LOGTYPE_STREAM_STABILITY = "stream_stability";
+const std::string LOGTYPE_GLOBAL_STAT = "global_stat";
+
 
 class SrsIdAlloc
 {
@@ -65,6 +70,9 @@ public:
 * it's ok to use it without config, which will log to console, and default trace level.
 * when you want to use different level, override this classs, set the protected _level.
 */
+
+class SrsRequest;
+
 class SrsTbLog : public ITbLog
 {
 // for utest to override
@@ -89,6 +97,8 @@ public:
     virtual void warn(const char* fmt, ...);
     virtual void error(const char* fmt, ...);
     virtual void fatal(const char* fmt, ...);
+	virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...);
+	virtual void global_log(int log_level, const char* fmt, ...);
 private:
     virtual bool generate_header(const char* level_name, int* header_size);
     virtual void write_log(bool is_except, char* str_log, int size, int level);
