@@ -52,20 +52,24 @@ enum e_client_type
 {
 	E_Ios = 1,
 	E_Android = 2,
+	E_Pc = 3,
 };
 
 enum e_user_role
 {
-	E_Player = 1,
-	E_Publisher = 2,
-	E_Edge = 3,
+	E_Publisher = 1,
+	E_Player = 2,
+	E_PublisherAI = 3,
+	E_Edge = 4,
 };
 
 enum e_net_type
 {
+	E_Unknown = 0,
 	E_Wifi = 1,
-	E_Mobile = 2,
-	E_Wired = 3,
+	E_TwoG = 2,
+	E_ThreeG = 3,
+	E_FourG = 4,
 };
 
 class SrsClientInfo
@@ -73,6 +77,7 @@ class SrsClientInfo
 public:
 	int client_type;
 	std::string client_version;
+	std::string publish_token;
 	int user_role;
 	int net_type;
 	int64_t conn_id;
@@ -131,6 +136,8 @@ public:
 public:
 	//show client info
 	virtual void show_client_info();
+	// set conn id
+	virtual void set_conn_id(int64_t _conn_id);
     /**
     * deep copy the request, for source to use it to support reload,
     * for when initialize the source, the request is valid,

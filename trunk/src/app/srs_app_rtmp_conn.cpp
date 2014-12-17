@@ -85,6 +85,7 @@ SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     : SrsConnection(srs_server, client_stfd)
 {
     req = new SrsRequest();
+	req->set_conn_id(SrsIdAlloc::generate_conn_id());
     res = new SrsResponse();
     skt = new SrsStSocket(client_stfd);
     rtmp = new SrsRtmpServer(skt);
@@ -152,8 +153,6 @@ int SrsRtmpConn::do_cycle()
     }
     
     srs_info("discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
-        req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
-	conn_log(TbLogLevel::Debug, "discovery app success. schema=%s, vhost=%s, port=%s, app=%s",
         req->schema.c_str(), req->vhost.c_str(), req->port.c_str(), req->app.c_str());
     
     if (req->schema.empty() || req->vhost.empty() || req->port.empty() || req->app.empty()) {
@@ -463,13 +462,14 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
-	if ((ret = get_client_info(type)) != ERROR_SUCCESS)
+	/*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
 	{
 		conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=get_client_info_failed", __FILE__, __LINE__, ret);
 		conn_log(TbLogLevel::Notice, "errno=%d", ret);
 		return ret;
 	}
 	req->show_client_info();
+	*/
     srs_trace("client identified, type=%s, stream_name=%s, duration=%.2f", 
         srs_client_type_string(type).c_str(), req->stream.c_str(), req->duration);
 
@@ -1524,6 +1524,6 @@ void SrsRtmpConn::conn_log(int type, const char* fmt, ...)
 
 void SrsRtmpConn::stat_log()
 {
-	conn_log(TbLogLevel::Notice, "recv_bytes=%lld send_bytes=%lld", kbps->get_recv_bytes(), kbps->get_send_bytes());
+	conn_log(TbLogLevel::Notice, "recv_bytes=%lld send_bytes=%lld", get_recv_bytes_delta(), get_send_bytes_delta());
 }
 
