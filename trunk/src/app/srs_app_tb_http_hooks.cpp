@@ -117,7 +117,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
 
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
-        srs_error("http uri parse on_publish url failed. "
+        srs_error("http uri parse on_connect url failed. "
             "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         return ret;
     }
@@ -143,7 +143,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
 
     SrsHttpClient http;
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
-        srs_error("http post on_publish uri failed. "
+        srs_error("http post on_connect uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         return ret;
@@ -155,26 +155,26 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
 
     try {
         if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
-            srs_error("http post on_publish parse result failed. "
+            srs_error("http post on_connect parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
-            srs_error("http post on_publish error non zero. "
+            srs_error("http post on_connect error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_ERROR_RETURNED;
         }
         SrsJsonAny *accept = NULL;
         if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
-            srs_error("http post on_publish parse result failed. "
+            srs_error("http post on_connect parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (accept->to_integer() == 0LL) {
-            srs_error("http post on_publish authentification check failed. "
+            srs_error("http post on_connect authentification check failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             throw ERROR_HTTP_ON_CONNECT_AUTH_FAIL;
@@ -195,7 +195,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
 
     srs_freep(http_res);
 
-    srs_trace("http hook on_publish success. "
+    srs_trace("http hook on_connect success. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
@@ -257,7 +257,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     }
 
     srs_freep(http_res);
-    srs_trace("http hook on_publish2 success. "
+    srs_trace("http hook on_publish success. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
 
