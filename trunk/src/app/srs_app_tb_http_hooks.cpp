@@ -350,7 +350,7 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
     append_param(ss, "userId", req->client_info->user_id);
     //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
-    append_param(ss, "status", TB_CLIVE_STATUS_CLOSE, false);
+    append_param(ss, "status", TB_CLIVE_STATUS_ERRORCLOSE, false);
     std::string postdata = ss.str();
     std::string res;
 
