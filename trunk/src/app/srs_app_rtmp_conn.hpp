@@ -52,6 +52,7 @@ class SrsBandwidth;
 class SrsKbps;
 class SrsRtmpClient;
 class SrsSharedPtrMessage;
+class SrsConnHeartbeat;
 
 /**
 * the client provides the main logic control for RTMP clients.
@@ -73,6 +74,7 @@ private:
 	int timer_id;
     SrsKbps* kbps;
 	SrsTimer* stat_timer;
+    SrsConnHeartbeat* heartbeat;
 public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();

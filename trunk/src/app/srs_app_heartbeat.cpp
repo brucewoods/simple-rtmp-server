@@ -35,6 +35,7 @@ using namespace std;
 #include <srs_app_json.hpp>
 #include <srs_app_http.hpp>
 #include <srs_app_utility.hpp>
+#include <srs_app_timer.hpp>
 
 SrsHttpHeartbeat::SrsHttpHeartbeat()
 {
@@ -93,3 +94,11 @@ void SrsHttpHeartbeat::heartbeat()
 
 #endif
 
+int SrsConnHeartbeat::cycle() {
+    //post heartbeat to im serv
+    pthread->stop_loop();
+}
+
+void SrsConnHeartbeat::callback() {
+    pthread->start();
+}

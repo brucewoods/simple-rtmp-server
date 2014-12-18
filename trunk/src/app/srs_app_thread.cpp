@@ -170,6 +170,7 @@ void SrsThread::thread_cycle()
         if ((ret = handler->on_end_cycle()) != ERROR_SUCCESS) {
             srs_warn("thread on end cycle failed, ignored and retry, ret=%d", ret);
             goto failed;
+
         }
         srs_info("thread on end cycle success");
 
