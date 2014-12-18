@@ -171,20 +171,23 @@ int main(int argc, char** argv)
     // never use srs log(srs_trace, srs_error, etc) before config parse the option,
     // which will load the log config and apply it.
     if ((ret = _srs_config->parse_options(argc, argv)) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=config_parse_options_failed", __FILE__, __LINE__, ret);
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=config_parse_options_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
 		return ret;
     }
     
     // config parsed, initialize log.
     if ((ret = _srs_log->initialize()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=init_log_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_log_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
 
     // we check the config when the log initialized.
     if ((ret = _srs_config->check_config()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=check_config_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=check_config_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     srs_trace("srs(simple-rtmp-server) "RTMP_SIG_SRS_VERSION);
@@ -217,8 +220,9 @@ int main(int argc, char** argv)
     * all initialize will done in this stage.
     */
     if ((ret = _srs_server->initialize()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=init_server_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     return run();
@@ -274,43 +278,51 @@ int run_master()
     int ret = ERROR_SUCCESS;
 
     if ((ret = _srs_server->initialize_signal()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=server_init_signal_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_signal_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->acquire_pid_file()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=acquire_pid_file_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=acquire_pid_file_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->initialize_st()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=init_st_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_st_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
 
     if ((ret = _srs_server->start_timer_manager()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=start_timer_manager_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=start_timermgr_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->listen()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=server_listen_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_listen_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->register_signal()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=register_signal_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=register_signal_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->ingest()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=server_ingest_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=ingest_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     if ((ret = _srs_server->cycle()) != ERROR_SUCCESS) {
-		tb_fatal("file=%s line=%d errno=%d errmsg=server_cycle_failed", __FILE__, __LINE__, ret);
-        return ret;
+		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_cycle_failed", SrsIdAlloc::generate_log_id(), \
+			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+		return ret;
     }
     
     return 0;
