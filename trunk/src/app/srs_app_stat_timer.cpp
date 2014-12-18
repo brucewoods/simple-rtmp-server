@@ -37,7 +37,7 @@ SrsConnStatTimer::~SrsConnStatTimer()
 
 void SrsConnStatTimer::callback()
 {
-	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_STREAM_STABILITY, rtmp_conn->get_req(), "recv_bytes=%lld send_bytes=%lld", rtmp_conn->get_recv_bytes_delta(), rtmp_conn->get_send_bytes_delta());
+	rtmp_conn->stream_bytes_stat();
 }
 
 SrsGlobalStatTimer::SrsGlobalStatTimer(int _interval)

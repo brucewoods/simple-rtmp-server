@@ -302,18 +302,8 @@ int SrsRtmpConn::service_cycle()
 		return ret;
     }
 	
-    while (true) {
-
-		//add stat timer
-		stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
-		_srs_server->timer_manager->regist_timer(stat_timer);
-		
+    while (true){ 
         ret = stream_service_cycle();
-
-		//remove stat timer
-		_srs_server->timer_manager->remove_timer(stat_timer);
-		
-		srs_freep(stat_timer);
         
         // stream service must terminated with error, never success.
         srs_assert(ret != ERROR_SUCCESS);
@@ -448,6 +438,15 @@ int SrsRtmpConn::get_client_info(int type)
 	return ret;
 }
 
+void SrsRtmpConn::stream_bytes_stat()
+{
+	kbps->sample();
+	int64_t send_bytes = get_send_bytes_delta();
+	int64_t recv_bytes = get_recv_bytes_delta();
+	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_STREAM_STABILITY, req ,"send_bytes=%lld recv_bytes=%lld", \
+		send_bytes, recv_bytes);
+}
+
 int SrsRtmpConn::stream_service_cycle()
 {
     int ret = ERROR_SUCCESS;
@@ -522,8 +521,6 @@ int SrsRtmpConn::stream_service_cycle()
         req->get_stream_url().c_str(), ip.c_str(), enabled_cache, vhost_is_edge, 
         source->source_id(), source->source_id());
     source->set_cache(enabled_cache);
-
-	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ERROR_SUCCESS);
 	
     switch (type) {
         case SrsRtmpConnPlay: {
@@ -533,21 +530,24 @@ int SrsRtmpConn::stream_service_cycle()
                 // notice edge to start for the first client.
                 if ((ret = source->on_edge_start_play()) != ERROR_SUCCESS) {
                     srs_error("notice edge start play stream failed. ret=%d", ret);
-					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
-                    return ret;
+					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
+					_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+					return ret;
                 }
             }
             
             // response connection start play
             if ((ret = rtmp->start_play(res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("start to play stream failed. ret=%d", ret);
-				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+				return ret;
             }
             if ((ret = http_hooks_on_play()) != ERROR_SUCCESS) {
                 srs_error("http hook on_play failed. ret=%d", ret);
-				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+				return ret;
             }
             
             srs_info("start to play stream %s success", req->stream.c_str());
@@ -592,15 +592,17 @@ int SrsRtmpConn::stream_service_cycle()
             if (vhost_is_edge) {
                 if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
                     srs_error("notice edge start publish stream failed. ret=%d", ret);
-					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
-                    return ret;
+					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
+					_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+					return ret;
                 }
             }
             
             if ((ret = rtmp->start_flash_publish(res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("flash start to publish stream failed. ret=%d", ret);
-				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
+				_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+				return ret;
             }
             
             if (!vhost_is_edge) {
@@ -620,6 +622,8 @@ int SrsRtmpConn::stream_service_cycle()
         default: {
             ret = ERROR_SYSTEM_CLIENT_INVALID;
             srs_info("invalid client type=%d. ret=%d", type, ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=invalid_client_type", __FILE__, __LINE__, ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
             return ret;
         }
     }
@@ -670,16 +674,18 @@ int SrsRtmpConn::playing(SrsSource* source)
     
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_play(req->vhost))) != ERROR_SUCCESS) {
         srs_error("check play_refer failed. ret=%d", ret);
-		tb_error("file=%s line=%d errno=%d errmsg=check_play_refer_failed", __FILE__, __LINE__, ret);
-        return ret;
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=check_play_refer_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+		return ret;
     }
     srs_verbose("check play_refer success.");
     
     SrsConsumer* consumer = NULL;
     if ((ret = source->create_consumer(consumer)) != ERROR_SUCCESS) {
         srs_error("create consumer failed. ret=%d", ret);
-		tb_warn("file=%s line=%d errno=%d errmsg=create_consumer_failed", __FILE__, __LINE__, ret);
-        return ret;
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=create_consumer_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+		return ret;
     }
     
     srs_assert(consumer != NULL);
@@ -694,7 +700,13 @@ int SrsRtmpConn::playing(SrsSource* source)
 
     bool user_specified_duration_to_stop = (req->duration > 0);
     int64_t starttime = -1;
-    
+
+	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ERROR_SUCCESS);
+
+	//add stat timer
+	stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+	_srs_server->timer_manager->regist_timer(stat_timer);
+	
     while (true) {
         // collect elapse for pithy print.
         pithy_print.elapse();
@@ -711,16 +723,16 @@ int SrsRtmpConn::playing(SrsSource* source)
             } else if (ret != ERROR_SUCCESS) {
                 if (!srs_is_client_gracefully_close(ret)) {
                     srs_error("recv client control message failed. ret=%d", ret);
-					tb_error("file=%s line=%d errno=%d errmsg=recv_client_control_msg_failed", __FILE__, __LINE__, ret);
+					_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=recv_client_control_msg_failed", __FILE__, __LINE__, ret);
                 }
-                return ret;
+                break;
             } else {
                 if ((ret = process_play_control_msg(consumer, msg)) != ERROR_SUCCESS) {
                     if (!srs_is_system_control_error(ret)) {
                         srs_error("process play control message failed. ret=%d", ret);
-						tb_warn("file=%s line=%d errno=%d errmsg=process_play_control_msg_failed", __FILE__, __LINE__, ret);
+						_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=process_play_control_msg_failed", __FILE__, __LINE__, ret);
                     }
-                    return ret;
+                    break;
                 }
             }
         }
@@ -729,20 +741,21 @@ int SrsRtmpConn::playing(SrsSource* source)
         int count = 0;
         if ((ret = consumer->dump_packets(msgs.size, msgs.msgs, count)) != ERROR_SUCCESS) {
             srs_error("get messages from consumer failed. ret=%d", ret);
-			tb_warn("file=%s line=%d errno=%d errmsg=get_msg_from_consumer_failed", __FILE__, __LINE__, ret);
-            return ret;
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=get_msg_from_consumer_failed", __FILE__, __LINE__, ret);
+            break;
         }
 
         // reportable
-        if (pithy_print.can_print()) {
-            kbps->sample();
-            srs_trace("-> "SRS_CONSTS_LOG_PLAY
-                " time=%"PRId64", msgs=%d, okbps=%d,%d,%d, ikbps=%d,%d,%d", 
-                pithy_print.age(), count,
-                kbps->get_send_kbps(), kbps->get_send_kbps_30s(), kbps->get_send_kbps_5m(),
-                kbps->get_recv_kbps(), kbps->get_recv_kbps_30s(), kbps->get_recv_kbps_5m());
-        }
-        
+        /*
+	        if (pithy_print.can_print()) {
+	            kbps->sample();
+	            srs_trace("-> "SRS_CONSTS_LOG_PLAY
+	                " time=%"PRId64", msgs=%d, okbps=%d,%d,%d, ikbps=%d,%d,%d", 
+	                pithy_print.age(), count,
+	                kbps->get_send_kbps(), kbps->get_send_kbps_30s(), kbps->get_send_kbps_5m(),
+	                kbps->get_recv_kbps(), kbps->get_recv_kbps_30s(), kbps->get_recv_kbps_5m());
+	        }
+       	 */
         // sendout messages
         // @remark, becareful, all msgs must be free explicitly,
         //      free by send_and_free_message or srs_freep.
@@ -768,26 +781,35 @@ int SrsRtmpConn::playing(SrsSource* source)
             // no need to assert msg, for the rtmp will assert it.
             if ((ret = rtmp->send_and_free_message(msg, res->stream_id)) != ERROR_SUCCESS) {
                 srs_error("send message to client failed. ret=%d", ret);
-				tb_warn("file=%s line=%d errno=%d errmsg=send_msg_to_client_failed", __FILE__, __LINE__, ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=send_msg_to_client_failed", __FILE__, __LINE__, ret);
+                break;
             }
         }
-        
+
+		if (ret != ERROR_SUCCESS){
+			break;
+		}
+		
         // if duration specified, and exceed it, stop play live.
         // @see: https://github.com/winlinvip/simple-rtmp-server/issues/45
         if (user_specified_duration_to_stop) {
             if (duration >= (int64_t)req->duration) {
                 ret = ERROR_RTMP_DURATION_EXCEED;
                 srs_trace("stop live for duration exceed. ret=%d", ret);
-				tb_debug("file=%s line=%d errno=%d errmsg=stop_live_for_duration_exceed", __FILE__, __LINE__, ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=stop_live_for_duration_exceed", __FILE__, __LINE__, ret);
+                break;
             }
         }
         
         // switch to other threads, to anti dead loop.
         st_usleep(0);
     }
-    
+
+	//remove stat timer
+	if (stat_timer != NULL){
+		_srs_server->timer_manager->remove_timer(stat_timer);
+	}
+	srs_freep(stat_timer);
     return ret;
 }
 
@@ -905,8 +927,9 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
             
     if ((ret = http_hooks_on_publish()) != ERROR_SUCCESS) {
         srs_error("http hook on_publish failed. ret=%d", ret);
-		_tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=hook_on_publish_failed", __FILE__, __LINE__, ret);
-        return ret;
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=hooks_on_publish_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+		return ret;
     }
     
     srs_info("flash start to publish stream %s success", req->stream.c_str());
@@ -931,8 +954,9 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
     
     if ((ret = refer->check(req->pageUrl, _srs_config->get_refer_publish(req->vhost))) != ERROR_SUCCESS) {
         srs_error("flash check publish_refer failed. ret=%d", ret);
-		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=check_publish_refer_failed", __FILE__, __LINE__, ret);
-        return ret;
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=check_publish_refer_failed", __FILE__, __LINE__, ret);
+		_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+		return ret;
     }
     srs_verbose("flash check publish_refer success.");
     
@@ -949,6 +973,12 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         }
         srs_verbose("flash hls on_publish success.");
     }
+
+	_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ERROR_SUCCESS);
+
+	//add stat timer
+	stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
+	_srs_server->timer_manager->regist_timer(stat_timer);
     
     while (true) {
         // switch to other st-threads.
@@ -960,7 +990,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 srs_error("flash recv identify client message failed. ret=%d", ret);
 				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=recv_client_identify_msg_failed", __FILE__, __LINE__, ret);
             }
-            return ret;
+            break;
         }
 
         SrsAutoFree(SrsMessage, msg);
@@ -968,6 +998,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         pithy_print.elapse();
 
         // reportable
+        /*
         if (pithy_print.can_print()) {
             kbps->sample();
             srs_trace("<- "SRS_CONSTS_LOG_WEB_PUBLISH
@@ -976,20 +1007,23 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 kbps->get_send_kbps(), kbps->get_send_kbps_30s(), kbps->get_send_kbps_5m(),
                 kbps->get_recv_kbps(), kbps->get_recv_kbps_30s(), kbps->get_recv_kbps_5m());
         }
+        */
     
         // process UnPublish or pausePublish event.
         if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
             SrsPacket* pkt = NULL;
             if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
                 srs_error("flash decode unpublish message failed. ret=%d", ret);
-                return ret;
+				_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=decode_unpublish_failed", __FILE__, __LINE__, ret);
+				break;
             }
             
             SrsAutoFree(SrsPacket, pkt);
             
             if (dynamic_cast<SrsTbPausePublishPacket*>(pkt)) {
                 SrsTbPausePublishPacket* pause_publish = dynamic_cast<SrsTbPausePublishPacket*>(pkt);
-            	if (stat_timer != NULL)
+				tb_debug("pause_publish msgtype = %d", pause_publish->get_message_type());
+				if (stat_timer != NULL)
             	{
 					stat_timer->pause();
 				}
@@ -999,7 +1033,8 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 continue;
             } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
                 SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
-                if (stat_timer != NULL)
+				tb_debug("pause_publish msgtype = %d", resume_publish->get_message_type());
+				if (stat_timer != NULL)
             	{
 					stat_timer->resume();
 				}
@@ -1012,7 +1047,9 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 // TODO: maybe need to support republish.
                 srs_trace("flash publish finished.");
                 //return ERROR_CONTROL_REPUBLISH;
-                return ERROR_CONTROL_RTMP_CLOSE;
+                tb_debug("flash publish finished!");
+                ret = ERROR_CONTROL_RTMP_CLOSE;
+				break;
             }
         }
 
@@ -1020,10 +1057,16 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
         if ((ret = process_publish_message(source, msg, vhost_is_edge)) != ERROR_SUCCESS) {
             srs_error("flash process publish message failed. ret=%d", ret);
 			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=process_publish_msg_failed", __FILE__, __LINE__, ret);
-            return ret;
+            break;
         }
     }
-    
+
+	//remove stat timer
+	if (stat_timer != NULL){
+		_srs_server->timer_manager->regist_timer(stat_timer);
+	}
+	srs_freep(stat_timer);
+	
     return ret;
 }
 

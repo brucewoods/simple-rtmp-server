@@ -79,6 +79,7 @@ public:
 	virtual SrsRequest* get_req(){ 
 		return req;
 	}
+	virtual void stream_bytes_stat();
 public:
     virtual void kbps_resample();
 protected:
