@@ -1319,7 +1319,7 @@ void SrsRtmpConn::http_hooks_on_errorclose()
         for (int i = 0; i < (int)on_close->args.size(); i++) {
             std::string url = on_close->args.at(i);
             int ret = SrsTbHttpHooks::on_errorclose(url, connection_id, ip, req);
-			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=errorClose url=%s errno=%d", url.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=errclose url=%s errno=%d", url.c_str(), ret);
         }
     }
 #endif
@@ -1392,7 +1392,7 @@ void SrsRtmpConn::http_hooks_on_publish_pause()
         for (int i = 0; i < (int)on_publish_pause->args.size(); i++) {
             std::string url = on_publish_pause->args.at(i);
             int ret = SrsTbHttpHooks::on_publish_pause(url, connection_id, ip, req);
-			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=pausePublish url=%s errno=%d", url.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish_pause url=%s errno=%d", url.c_str(), ret);
         }
     }
 #endif
@@ -1414,7 +1414,7 @@ void SrsRtmpConn::http_hooks_on_publish_resume()
         for (int i = 0; i < (int)on_publish_resume->args.size(); i++) {
             std::string url = on_publish_resume->args.at(i);
             int ret = SrsTbHttpHooks::on_publish_resume(url, connection_id, ip, req);
-			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=resumePublish url=%s errno=%d", url.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish_resume url=%s errno=%d", url.c_str(), ret);
 		}
     }
 #endif

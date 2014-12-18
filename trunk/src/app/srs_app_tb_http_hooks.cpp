@@ -29,6 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_http.hpp>
 #include <srs_app_json.hpp>
 #include <srs_app_http_client.hpp>
+#include <srs_app_tb_log.hpp>
 
 using namespace std;
 
@@ -119,6 +120,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_connect url failed. "
             "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=parse_on_connect_url_failed", __FILE__, __LINE__, ret);
         return ret;
     }
 
@@ -146,6 +148,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
         srs_error("http post on_connect uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
             client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=post_on_connect_url_failed", __FILE__, __LINE__, ret);
         return ret;
     }
 
@@ -158,12 +161,14 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
             srs_error("http post on_connect parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_connect error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
             throw ERROR_HTTP_ERROR_RETURNED;
         }
         SrsJsonAny *accept = NULL;
@@ -171,12 +176,14 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
             srs_error("http post on_connect parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=parse_result_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (accept->to_integer() == 0LL) {
             srs_error("http post on_connect authentification check failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect file=%s line=%d errno=%d errmsg=authentification_check_failed", __FILE__, __LINE__, ERROR_HTTP_ON_CONNECT_AUTH_FAIL);
             throw ERROR_HTTP_ON_CONNECT_AUTH_FAIL;
         }
     } catch (int r) {
@@ -209,6 +216,8 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_publish2 url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish file=%s line=%d errno=%d errmsg=parse_url_failed", __FILE__, __LINE__, ret);
+        
         return ret;
     }
 
@@ -231,6 +240,8 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
         srs_error("http post on_publish2 uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish file=%s line=%d errno=%d errmsg=post_url_failed", __FILE__, __LINE__, ret);
+        
         return ret;
     }
 
@@ -243,12 +254,16 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
             srs_error("http post on_publish2 parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
+        
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_publish2 error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish file=%s line=%d errno=%d errmsg=error_non_zero", __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
+        
             throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
@@ -271,6 +286,8 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_unpublish url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=unpublish file=%s line=%d errno=%d errmsg=parse_url_failed", __FILE__, __LINE__, ret);
+        
         return ret;
     }
 
@@ -293,6 +310,8 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
         srs_error("http post on_unpublish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=unpublish file=%s line=%d errno=%d errmsg=post_url_failed", __FILE__, __LINE__, ret);
+   
         return ret;
     }
 
@@ -305,12 +324,16 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
             srs_error("http post on_unpublish parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=unpublish file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
+   
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_unpublish error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=unpublish file=%s line=%d errno=%d errmsg=error_non_zero", __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
+   
             throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
@@ -333,6 +356,8 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_error_close url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=errclose file=%s line=%d errno=%d errmsg=parse_url_failed", __FILE__, __LINE__, ret);
+   
         return ret;
     }
 
@@ -355,6 +380,7 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
         srs_error("http post on_error_close uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=errclose file=%s line=%d errno=%d errmsg=post_url_failed", __FILE__, __LINE__, ret);
         return ret;
     }
 
@@ -367,12 +393,16 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
             srs_error("http post on_error_close parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=errclose file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
+       
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_error_close error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=errclose file=%s line=%d errno=%d errmsg=error_non_zero", __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
+       
             throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
@@ -395,6 +425,8 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_publish_pause url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_pause file=%s line=%d errno=%d errmsg=parse_url_failed", __FILE__, __LINE__, ret);
+       
         return ret;
     }
 
@@ -417,6 +449,8 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
         srs_error("http post on_publish_pause uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_pause file=%s line=%d errno=%d errmsg=post_url_failed", __FILE__, __LINE__, ret);
+       
         return ret;
     }
 
@@ -429,12 +463,16 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
             srs_error("http post on_publish_pause parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
-            throw ERROR_HTTP_DATA_INVLIAD;
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_pause file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
+ 
+			throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_publish_pause error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_pause file=%s line=%d errno=%d errmsg=error_non_zero", __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
+ 
             throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
@@ -457,6 +495,8 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse on_publish_resume url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_resume file=%s line=%d errno=%d errmsg=parse_url_failed", __FILE__, __LINE__, ret);
+ 
         return ret;
     }
 
@@ -479,6 +519,8 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
         srs_error("http post on_publish_resume uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+		_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_resume file=%s line=%d errno=%d errmsg=post_url_failed", __FILE__, __LINE__, ret);
+ 
         return ret;
     }
 
@@ -491,12 +533,16 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
             srs_error("http post on_publish_resume parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_resume file=%s line=%d errno=%d errmsg=get_res_data_failed", __FILE__, __LINE__, ret);
+ 
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
             srs_error("http post on_publish_resume error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+			_tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish_resume file=%s line=%d errno=%d errmsg=error_non_zero", __FILE__, __LINE__, ret);
+ 
             throw ERROR_HTTP_ERROR_RETURNED;
         }
     } catch (int r) {
