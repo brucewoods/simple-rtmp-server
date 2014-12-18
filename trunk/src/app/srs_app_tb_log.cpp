@@ -38,6 +38,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdlib.h>
 
+const int DEFAULT_TB_LOG_LEVEL = TbLogLevel::Notice;
+
 using namespace std;
 
 int64_t SrsIdAlloc::generate_log_id()
@@ -79,7 +81,7 @@ int64_t SrsIdAlloc::generate_conn_id()
 
 SrsTbLog::SrsTbLog()
 {
-    _level = TbLogLevel::Debug;
+    _level = DEFAULT_TB_LOG_LEVEL;
     log_data = new char[TB_LOG_MAX_SIZE];
 
     fd = -1;
