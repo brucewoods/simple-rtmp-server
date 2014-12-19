@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <srs_app_heartbeat.hpp>
+#include <srs_kernel_error.hpp>
 
 #ifdef SRS_AUTO_HTTP_PARSER
 
@@ -38,6 +39,7 @@ using namespace std;
 #include <srs_app_timer.hpp>
 #include <srs_app_config.hpp>
 #include <srs_app_source.hpp>
+#include <srs_app_tb_http_hooks.hpp>
 
 SrsHttpHeartbeat::SrsHttpHeartbeat()
 {
@@ -101,6 +103,8 @@ SrsConnHeartbeat::SrsConnHeartbeat(int _interval, SrsRequest* _req) : SrsTimer(_
 }
 
 int SrsConnHeartbeat::cycle() {
+    int ret = ERROR_SUCCESS;
+
     //post heartbeat to im serv
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
@@ -108,17 +112,18 @@ int SrsConnHeartbeat::cycle() {
         SrsConfDirective* on_stop = _srs_config->get_vhost_on_stop(req->vhost);
         if (!on_stop) {
             srs_info("ignore the empty http callback: on_stop");
-            return;
+            return ret;
         }
 
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_stop->args.size(); i++) {
             std::string url = on_stop->args.at(i);
-            SrsHttpHooks::on_stop(url, connection_id, ip, req);
+            SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
         }
     }
 
     pthread->stop_loop();
+    return ret;
 }
 
 void SrsConnHeartbeat::callback() {
