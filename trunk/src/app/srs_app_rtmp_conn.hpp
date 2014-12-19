@@ -52,74 +52,75 @@ class SrsBandwidth;
 class SrsKbps;
 class SrsRtmpClient;
 class SrsSharedPtrMessage;
+class SrsConnHeartbeat;
 
 /**
  * the client provides the main logic control for RTMP clients.
  */
 class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandler
 {
-	private:
-		SrsRequest* req;
-		SrsResponse* res;
-		SrsStSocket* skt;
-		SrsRtmpServer* rtmp;
-		SrsRefer* refer;
-		SrsBandwidth* bandwidth;
-		// elapse duration in ms
-		// for live play duration, for instance, rtmpdump to record.
-		// @see https://github.com/winlinvip/simple-rtmp-server/issues/47
-		int64_t duration;
-		bool is_edge;
-		int timer_id;
-		SrsKbps* kbps;
-		SrsTimer* stat_timer;
+	SrsRequest* req;
+	SrsResponse* res;
+	SrsStSocket* skt;
+	SrsRtmpServer* rtmp;
+	SrsRefer* refer;
+	SrsBandwidth* bandwidth;
+	// elapse duration in ms
+	// for live play duration, for instance, rtmpdump to record.
+	// @see https://github.com/winlinvip/simple-rtmp-server/issues/47
+	int64_t duration;
+	bool is_edge;
+	int timer_id;
+	SrsKbps* kbps;
+	SrsTimer* stat_timer;
+	SrsConnHeartbeat* heartbeat;
 	public:
-		SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
-		virtual ~SrsRtmpConn();
-		virtual SrsRequest* get_req(){ 
-			return req;
-		}
-		virtual void stream_bytes_stat();
+	SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
+	virtual ~SrsRtmpConn();
+	virtual SrsRequest* get_req(){ 
+		return req;
+	}
+	virtual void stream_bytes_stat();
 	public:
-		virtual void kbps_resample();
+	virtual void kbps_resample();
 	protected:
-		virtual int do_cycle();
-		// interface ISrsReloadHandler
+	virtual int do_cycle();
+	// interface ISrsReloadHandler
 	public:
-		virtual int on_reload_vhost_removed(std::string vhost);
-		// interface IKbpsDelta
+	virtual int on_reload_vhost_removed(std::string vhost);
+	// interface IKbpsDelta
 	public:
-		virtual int64_t get_send_bytes_delta();
-		virtual int64_t get_recv_bytes_delta();
+	virtual int64_t get_send_bytes_delta();
+	virtual int64_t get_recv_bytes_delta();
 	private:
-		//store client info
-		virtual int get_client_info(int type);
-		// when valid and connected to vhost/app, service the client.
-		virtual int service_cycle();
-		// stream(play/publish) service cycle, identify client first.
-		virtual int stream_service_cycle();
-		virtual int check_vhost();
-		virtual int playing(SrsSource* source);
-		virtual int fmle_publishing(SrsSource* source);
-		virtual int do_fmle_publishing(SrsSource* source);
-		virtual int flash_publishing(SrsSource* source);
-		virtual int do_flash_publishing(SrsSource* source);
-		virtual int process_publish_message(SrsSource* source, SrsMessage* msg, bool vhost_is_edge);
-		virtual int process_play_control_msg(SrsConsumer* consumer, SrsMessage* msg);
+	//store client info
+	virtual int get_client_info(int type);
+	// when valid and connected to vhost/app, service the client.
+	virtual int service_cycle();
+	// stream(play/publish) service cycle, identify client first.
+	virtual int stream_service_cycle();
+	virtual int check_vhost();
+	virtual int playing(SrsSource* source);
+	virtual int fmle_publishing(SrsSource* source);
+	virtual int do_fmle_publishing(SrsSource* source);
+	virtual int flash_publishing(SrsSource* source);
+	virtual int do_flash_publishing(SrsSource* source);
+	virtual int process_publish_message(SrsSource* source, SrsMessage* msg, bool vhost_is_edge);
+	virtual int process_play_control_msg(SrsConsumer* consumer, SrsMessage* msg);
 	private:
-		virtual int check_edge_token_traverse_auth();
-		virtual int connect_server(int origin_index, st_netfd_t* pstsock);
-		virtual int do_token_traverse_auth(SrsRtmpClient* client);
+	virtual int check_edge_token_traverse_auth();
+	virtual int connect_server(int origin_index, st_netfd_t* pstsock);
+	virtual int do_token_traverse_auth(SrsRtmpClient* client);
 	private:
-		virtual int http_hooks_on_connect();
-		virtual void http_hooks_on_close();
-		virtual int http_hooks_on_publish();
-		virtual void http_hooks_on_unpublish();
-		virtual void http_hooks_on_publish_pause();
-		virtual void http_hooks_on_publish_resume();
-		virtual int http_hooks_on_play();
-		virtual void http_hooks_on_stop();
-		virtual void http_hooks_on_errorclose();
+	virtual int http_hooks_on_connect();
+	virtual void http_hooks_on_close();
+	virtual int http_hooks_on_publish();
+	virtual void http_hooks_on_unpublish();
+	virtual void http_hooks_on_publish_pause();
+	virtual void http_hooks_on_publish_resume();
+	virtual int http_hooks_on_play();
+	virtual void http_hooks_on_stop();
+	virtual void http_hooks_on_errorclose();
 };
 
 #endif

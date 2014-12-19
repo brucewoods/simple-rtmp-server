@@ -43,6 +43,7 @@ using namespace std;
 #define TB_CLIVE_STATUS_ERRORCLOSE 8
 #define TB_CLIVE_STATUS_PUBLISH_PAUSE 2
 #define TB_CLIVE_STATUS_PUBLISH_RESUME 9
+#define TB_CLIVE_STATUS_HEARTBEAT 10
 
 SrsTbHttpHooks::SrsTbHttpHooks()
 {
@@ -557,3 +558,66 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
 
     return ret;
 }
+
+int SrsTbHttpHooks::on_heartbeat(string url, int client_id, string ip, SrsRequest* req) {
+    int ret = ERROR_SUCCESS;
+
+    SrsHttpUri uri;
+    if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
+        srs_error("http uri parse on_heartbeat url failed. "
+                "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
+        return ret;
+    }
+
+    srs_assert(req->client_info);
+
+    std::stringstream ss;
+    append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
+    append_param(ss, "groupId", req->client_info->group_id);
+    //append_param(ss, "group_id", 1);
+    append_param(ss, "userId", req->client_info->user_id);
+    //append_param(ss, "user_id", 2);
+    append_param(ss, "identity", req->client_info->user_role);
+    append_param(ss, "status", TB_CLIVE_STATUS_HEARTBEAT, false);
+    std::string postdata = ss.str();
+    std::string res;
+
+    SrsHttpClient http;
+    if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
+        srs_error("http post on_heartbeat uri failed. "
+                "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+        return ret;
+    }
+
+    int error = 0;
+    SrsJsonObject* data = NULL;
+    SrsJsonObject* http_res = NULL;
+
+    try {
+        if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
+            srs_error("http post on_heartbeat parse result failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ERROR_HTTP_DATA_INVLIAD;
+        }
+        if (error != 0) {
+            srs_error("http post on_heartbeat error non zero. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            throw ERROR_HTTP_ERROR_RETURNED;
+        }
+    } catch (int r) {
+        srs_freep(http_res);
+        return (ret = r);
+    }
+
+    srs_freep(http_res);
+    srs_trace("http hook on_heartbeat success. "
+            "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+            client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+
+    return ret;
+}
+
