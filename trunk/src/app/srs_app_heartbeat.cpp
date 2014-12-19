@@ -108,7 +108,7 @@ int SrsConnHeartbeat::cycle() {
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_stop
-        SrsConfDirective* on_stop = _srs_config->get_vhost_on_stop(req->vhost);
+        SrsConfDirective* on_stop = _srs_config->get_vhost_on_close(req->vhost);
         if (!on_stop) {
             srs_info("ignore the empty http callback: on_stop");
             return ret;
