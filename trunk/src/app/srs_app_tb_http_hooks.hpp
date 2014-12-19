@@ -129,6 +129,13 @@ public:
     *         ignore if empty.
     */
     static int on_publish_resume(std::string url, int client_id, std::string ip, SrsRequest* req);
+    /**
+    * on_heartbeat hook, notify the im server a certain stream is still publishing.
+    * @param client_id the id of client on server.
+    * @param url the api server url, to process the event.
+    *         ignore if empty.
+    */
+    static int on_heartbeat(std::string url, int client_id, std::string ip, SrsRequest* req);
 };
 
 #endif

@@ -29,6 +29,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include <srs_core.hpp>
 
+#include <srs_app_thread.hpp>
+#include <srs_app_timer.hpp>
+#include <string>
+
+class SrsRequest;
+
 #ifdef SRS_AUTO_HTTP_PARSER
 
 /**
@@ -45,6 +51,23 @@ public:
 };
 
 #endif
+
+/**
+* the http heartbeat to notice im server
+* that a stream is still publishing
+*/
+class SrsConnHeartbeat: public SrsTimer, public ISrsThreadHandler {
+private:
+    SrsThread* pthread;
+    SrsRequest* req;
+    std::string ip;
+public:
+    SrsConnHeartbeat(int _interval, SrsRequest* _req, std::string _ip);
+public:
+    virtual void callback();
+public:
+    virtual int cycle();
+};
 
 #endif
 
