@@ -312,12 +312,12 @@ int SrsRtmpConn::service_cycle()
 
 		//add stat timer
 		stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
-		_srs_server->timer_manager->regist_timer(stat_timer);
+		server->timer_manager->regist_timer(stat_timer);
 		
         ret = stream_service_cycle();
 
 		//remove stat timer
-		_srs_server->timer_manager->remove_timer(stat_timer);
+		server->timer_manager->remove_timer(stat_timer);
 		
 		srs_freep(stat_timer);
         
