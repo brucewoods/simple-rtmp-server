@@ -33,6 +33,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class SrsTimer;
 class SrsRtmpConn;
+class SrsRequest;
 
 #ifdef SRS_AUTO_HTTP_PARSER
 
@@ -58,9 +59,9 @@ public:
 class SrsConnHeartbeat: public SrsTimer, public ISrsThreadHandler {
 private:
     SrsThread* pthread;
-    SrsRtmpConn* conn;
+    SrsRequest* req;
 public:
-    SrsConnHeartbeat();
+    SrsConnHeartbeat(int _interval, SrsRequest* _req);
 public:
     virtual void callback();
 public:
