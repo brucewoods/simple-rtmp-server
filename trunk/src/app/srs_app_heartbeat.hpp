@@ -50,7 +50,6 @@ public:
     virtual void heartbeat();
 };
 
-#endif
 
 /**
 * the http heartbeat to notice im server
@@ -68,6 +67,9 @@ public:
 public:
     virtual int cycle();
 };
+
+#endif
+
 
 #endif
 

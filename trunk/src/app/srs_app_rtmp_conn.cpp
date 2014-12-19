@@ -53,6 +53,7 @@ using namespace std;
 #include <srs_app_tb_http_hooks.hpp>
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
+#include <srs_app_heartbeat.hpp>
 
 // when stream is busy, for example, streaming is already
 // publishing, when a new client to request to publish,
