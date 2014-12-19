@@ -30,9 +30,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_core.hpp>
 
 #include <srs_app_thread.hpp>
+#include <srs_app_timer.hpp>
 
-class SrsTimer;
-class SrsRtmpConn;
 class SrsRequest;
 
 #ifdef SRS_AUTO_HTTP_PARSER

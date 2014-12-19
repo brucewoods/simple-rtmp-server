@@ -36,7 +36,6 @@ using namespace std;
 #include <srs_app_json.hpp>
 #include <srs_app_http.hpp>
 #include <srs_app_utility.hpp>
-#include <srs_app_timer.hpp>
 #include <srs_app_config.hpp>
 #include <srs_app_source.hpp>
 #include <srs_app_tb_http_hooks.hpp>
