@@ -26,6 +26,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #ifdef SRS_AUTO_HTTP_PARSER
 
+#include <string>
 #include <sstream>
 using namespace std;
 
@@ -37,7 +38,7 @@ using namespace std;
 #include <srs_app_http.hpp>
 #include <srs_app_utility.hpp>
 #include <srs_app_config.hpp>
-#include <srs_app_source.hpp>
+#include <srs_protocol_rtmp.hpp>
 #include <srs_app_tb_http_hooks.hpp>
 
 SrsHttpHeartbeat::SrsHttpHeartbeat()
@@ -97,8 +98,9 @@ void SrsHttpHeartbeat::heartbeat()
 
 #endif
 
-SrsConnHeartbeat::SrsConnHeartbeat(int _interval, SrsRequest* _req) : SrsTimer(_interval) {
+SrsConnHeartbeat::SrsConnHeartbeat(int _interval, SrsRequest* _req, string _ip) : SrsTimer(_interval) {
     req = _req;
+    ip = _ip;
 }
 
 int SrsConnHeartbeat::cycle() {
