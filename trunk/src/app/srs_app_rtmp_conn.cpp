@@ -77,6 +77,9 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
+// conn heartbeat to im srv interval
+#define SRS_CONN_HEARTBEAT_INTERVAL_US (int64_t)(10*1000*1000LL)
+
 const int STAT_LOG_INTERVAL = 5;
 
 extern SrsServer* _srs_server;
@@ -94,6 +97,7 @@ SrsRtmpConn::SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd)
     duration = 0;
 	is_edge = false;
 	stat_timer = NULL;
+    hb_timer = NULL;
     kbps = new SrsKbps();
     kbps->set_io(skt, skt);
     
@@ -111,6 +115,7 @@ SrsRtmpConn::~SrsRtmpConn()
     srs_freep(refer);
     srs_freep(bandwidth);
     srs_freep(kbps);
+    srs_freep(hb_timer);
 }
 
 void SrsRtmpConn::kbps_resample()
