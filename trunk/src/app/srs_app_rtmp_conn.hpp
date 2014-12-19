@@ -52,7 +52,6 @@ class SrsBandwidth;
 class SrsKbps;
 class SrsRtmpClient;
 class SrsSharedPtrMessage;
-class SrsConnHeartbeat;
 
 /**
 * the client provides the main logic control for RTMP clients.
