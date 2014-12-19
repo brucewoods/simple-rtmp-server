@@ -74,7 +74,7 @@ private:
 	int timer_id;
     SrsKbps* kbps;
 	SrsTimer* stat_timer;
-    SrsConnHeartbeat* hb_timer;
+    SrsTimer* hb_timer;
 public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
