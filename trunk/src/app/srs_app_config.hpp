@@ -584,6 +584,11 @@ public:
     */
     virtual SrsConfDirective*   get_vhost_on_publish_resume(std::string vhost);
     /**
+    * get the on_heartbeat callbacks of vhost.
+    * @return the on_heartbeat callback directive, the args is the url to callback.
+    */
+    virtual SrsConfDirective*   get_vhost_on_heartbeat(std::string vhost);
+    /**
     * get the on_play callbacks of vhost.
     * @return the on_play callback directive, the args is the url to callback.
     */

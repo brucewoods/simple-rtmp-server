@@ -2155,7 +2155,7 @@ SrsConfDirective* SrsConfig::get_vhost_on_publish_pause(string vhost)
         return NULL;
     }
 
-    return conf->get("on_unpublish");
+    return conf->get("on_publish_pause");
 }
 
 SrsConfDirective* SrsConfig::get_vhost_on_publish_resume(string vhost)
@@ -2166,7 +2166,18 @@ SrsConfDirective* SrsConfig::get_vhost_on_publish_resume(string vhost)
         return NULL;
     }
 
-    return conf->get("on_unpublish");
+    return conf->get("on_publish_resume");
+}
+
+SrsConfDirective* SrsConfig::get_vhost_on_heartbeat(string vhost)
+{
+    SrsConfDirective* conf = get_vhost_http_hooks(vhost);
+
+    if (!conf) {
+        return NULL;
+    }
+
+    return conf->get("on_heartbeat");
 }
 
 SrsConfDirective* SrsConfig::get_vhost_on_play(string vhost)

@@ -274,9 +274,7 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
     append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     append_param(ss, "groupId", req->client_info->group_id);
-    //append_param(ss, "group_id", 1);
     append_param(ss, "userId", req->client_info->user_id);
-    //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "status", TB_CLIVE_STATUS_CLOSE, false);
     std::string postdata = ss.str();
@@ -336,9 +334,7 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
     append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     append_param(ss, "groupId", req->client_info->group_id);
-    //append_param(ss, "group_id", 1);
     append_param(ss, "userId", req->client_info->user_id);
-    //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "status", TB_CLIVE_STATUS_ERRORCLOSE, false);
     std::string postdata = ss.str();
@@ -398,9 +394,7 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
     append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     append_param(ss, "groupId", req->client_info->group_id);
-    //append_param(ss, "group_id", 1);
     append_param(ss, "userId", req->client_info->user_id);
-    //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "status", TB_CLIVE_STATUS_PUBLISH_PAUSE, false);
     std::string postdata = ss.str();
@@ -460,9 +454,7 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
     append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     append_param(ss, "groupId", req->client_info->group_id);
-    //append_param(ss, "group_id", 1);
     append_param(ss, "userId", req->client_info->user_id);
-    //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "status", TB_CLIVE_STATUS_PUBLISH_RESUME, false);
     std::string postdata = ss.str();
@@ -522,9 +514,7 @@ int SrsTbHttpHooks::on_heartbeat(string url, int client_id, string ip, SrsReques
     append_param(ss, "method", TB_CLIVE_METHOD_NOTIFY_STREAM_STATUS);
     append_param(ss, "cmd", TB_CLIVE_CMD_NOTIFY_STREAM_STATUS);
     append_param(ss, "groupId", req->client_info->group_id);
-    //append_param(ss, "group_id", 1);
     append_param(ss, "userId", req->client_info->user_id);
-    //append_param(ss, "user_id", 2);
     append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "status", TB_CLIVE_STATUS_HEARTBEAT, false);
     std::string postdata = ss.str();

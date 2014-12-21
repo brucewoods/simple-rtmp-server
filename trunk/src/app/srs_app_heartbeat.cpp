@@ -108,16 +108,16 @@ int SrsConnHeartbeat::cycle() {
     //post heartbeat to im serv
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
-        // HTTP: on_stop
-        SrsConfDirective* on_stop = _srs_config->get_vhost_on_close(req->vhost);
-        if (!on_stop) {
-            srs_info("ignore the empty http callback: on_stop");
+        // HTTP: on_heartbeat
+        SrsConfDirective* on_heartbeat = _srs_config->get_vhost_on_heartbeat(req->vhost);
+        if (!on_heartbeat) {
+            srs_info("ignore the empty http callback: on_heartbeat");
             return ret;
         }
 
         int connection_id = _srs_context->get_id();
-        for (int i = 0; i < (int)on_stop->args.size(); i++) {
-            std::string url = on_stop->args.at(i);
+        for (int i = 0; i < (int)on_heartbeat->args.size(); i++) {
+            std::string url = on_heartbeat->args.at(i);
             SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
         }
     }
