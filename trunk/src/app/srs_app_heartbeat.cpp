@@ -99,7 +99,7 @@ void SrsHttpHeartbeat::heartbeat()
 SrsConnHeartbeat::SrsConnHeartbeat(int _interval, SrsRequest* _req, string _ip) : SrsTimer(_interval) {
     req = _req;
     ip = _ip;
-    pthread = new SrsThread(this, 0LL, false);
+
 }
 
 int SrsConnHeartbeat::cycle() {
@@ -127,6 +127,8 @@ int SrsConnHeartbeat::cycle() {
 }
 
 void SrsConnHeartbeat::callback() {
+    srs_freep(pthread);
+    pthread = new SrsThread(this, 0LL, false);
     pthread->start();
 }
 
