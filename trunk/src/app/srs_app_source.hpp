@@ -282,7 +282,7 @@ private:
 	static bool if_init;
 public:
 	static int static_init();
-	static void stat_log();
+	static void global_stat();
     /**
     * find stream by vhost/app/stream.
     * @param req the client request.
