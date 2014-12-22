@@ -1367,7 +1367,7 @@ int SrsConfig::check_config()
                     string m = conf->at(j)->name.c_str();
                     if (m != "enabled" && m != "on_connect" && m != "on_close" && m != "on_publish"
                         && m != "on_unpublish" && m != "on_play" && m != "on_stop"
-                        && m != "on_publish_pause" && m != "on_publish_resume"
+                        && m != "on_publish_pause" && m != "on_publish_resume" && m != "on_heartbeat"
                     ) {
                         ret = ERROR_SYSTEM_CONFIG_INVALID;
                         srs_error("unsupported vhost http_hooks directive %s, ret=%d", m.c_str(), ret);
