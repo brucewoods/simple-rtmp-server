@@ -109,7 +109,7 @@ int SrsTbLog::initialize()
 	int ret = ERROR_SUCCESS;
 
 	log_to_file_tank = true;
-	_level = 0x03;
+	_level = 0x02;
 
 	return ret;
 }
@@ -131,7 +131,7 @@ void SrsTbLog::debug(const char* fmt, ...)
 	size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
 	va_end(ap);
 
-	write_log(false, log_data, size, TbLogLevel::Debug);
+	write_log(log_data, size, TbLogLevel::Debug);
 }
 
 void SrsTbLog::notice(const char* fmt, ...)
@@ -151,7 +151,7 @@ void SrsTbLog::notice(const char* fmt, ...)
 	size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
 	va_end(ap);
 
-	write_log(false, log_data, size, TbLogLevel::Notice);
+	write_log(log_data, size, TbLogLevel::Notice);
 }
 
 void SrsTbLog::warn(const char* fmt, ...)
@@ -171,7 +171,7 @@ void SrsTbLog::warn(const char* fmt, ...)
 	size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
 	va_end(ap);
 
-	write_log(true, log_data, size, TbLogLevel::Warn);
+	write_log(log_data, size, TbLogLevel::Warn);
 }
 
 void SrsTbLog::error(const char* fmt, ...)
@@ -191,7 +191,7 @@ void SrsTbLog::error(const char* fmt, ...)
 	size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
 	va_end(ap);
 
-	write_log(true, log_data, size, TbLogLevel::Error);
+	write_log(log_data, size, TbLogLevel::Error);
 }
 
 void SrsTbLog::fatal(const char* fmt, ...)
@@ -211,7 +211,7 @@ void SrsTbLog::fatal(const char* fmt, ...)
 	size += vsnprintf(log_data + size, TB_LOG_MAX_SIZE - size, fmt, ap);
 	va_end(ap);
 
-	write_log(true, log_data, size, TbLogLevel::Fatal);
+	write_log(log_data, size, TbLogLevel::Fatal);
 }
 
 void SrsTbLog::conn_log(int log_level, string log_type, SrsRequest* req, const char * fmt,...)
@@ -356,7 +356,7 @@ bool SrsTbLog::generate_header(const char* level_name, int* header_size)
 	return true;
 }
 
-void SrsTbLog::write_log(bool is_except, char *str_log, int size, int level)
+void SrsTbLog::write_log(char *str_log, int size, int level)
 {
 	// ensure the tail and EOF of string
 	//      LOG_TAIL_SIZE for the TAIL char.
@@ -365,9 +365,9 @@ void SrsTbLog::write_log(bool is_except, char *str_log, int size, int level)
 
 	// add some to the end of char.
 	str_log[size++] = TB_LOG_TAIL;
-	str_log[size++] = 0;
+	//str_log[size++] = 0;
 
-	if (!is_except)		//notice
+	if (level < TbLogLevel::Warn)		//notice
 	{
 		if (fd < 0)
 		{
@@ -391,6 +391,7 @@ void SrsTbLog::write_log(bool is_except, char *str_log, int size, int level)
 			::write(wf_fd, str_log, size);
 		}
 	}
+	memset(log_data, 0, TB_LOG_MAX_SIZE);
 }
 
 void SrsTbLog::open_log_file()
