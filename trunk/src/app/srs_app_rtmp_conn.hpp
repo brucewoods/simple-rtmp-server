@@ -81,8 +81,6 @@ public:
     }
     virtual void stream_bytes_stat();
 public:
-    virtual void conn_log(int type, const char* fmt, ...);
-    virtual void stat_log();
     virtual void kbps_resample();
 protected:
     virtual int do_cycle();
