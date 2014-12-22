@@ -132,7 +132,7 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
     append_param(ss, "cmd", TB_CLIVE_CMD_CHECK_USER_INFO);
     append_param(ss, "groupId", req->client_info->group_id);
     append_param(ss, "userId", req->client_info->user_id);
-    append_param(ss, "identity", 1);
+    append_param(ss, "identity", req->client_info->user_role);
     append_param(ss, "publishToken", "test");
     append_param(ss, "client_type", req->client_info->client_type);
     append_param(ss, "net_type", 0, false);
