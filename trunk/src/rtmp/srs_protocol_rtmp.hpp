@@ -531,6 +531,8 @@ class SrsRtmpServer
         virtual int identify_flash_publish_client(SrsPublishPacket* req, SrsRtmpConnType& type, std::string& stream_name);
     private:
         virtual int identify_play_client(SrsPlayPacket* req, SrsRtmpConnType& type, std::string& stream_name, double& duration);
+    private:
+        virtual int parse_url_by_app();
 };
 
 #endif
