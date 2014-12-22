@@ -461,7 +461,7 @@ class SrsRtmpServer
          * @stream_name, output the client publish/play stream name. @see: SrsRequest.stream
          * @duration, output the play client duration. @see: SrsRequest.duration
          */
-        virtual int identify_client(int stream_id, SrsRtmpConnType& type, std::string& stream_name, double& duration);
+        virtual int identify_client(int stream_id, std::string app, SrsRtmpConnType& type, std::string& stream_name, double& duration);
         /**
          * set the chunk size when client type identified.
          */
@@ -526,13 +526,13 @@ class SrsRtmpServer
                 return protocol->expect_message<T>(pmsg, ppacket);
             }
     private:
-        virtual int identify_create_stream_client(SrsCreateStreamPacket* req, int stream_id, SrsRtmpConnType& type, std::string& stream_name, double& duration);
-        virtual int identify_fmle_publish_client(SrsFMLEStartPacket* req, SrsRtmpConnType& type, std::string& stream_name);
-        virtual int identify_flash_publish_client(SrsPublishPacket* req, SrsRtmpConnType& type, std::string& stream_name);
+        virtual int identify_create_stream_client(SrsCreateStreamPacket* req, int stream_id, std::string app, SrsRtmpConnType& type, std::string& stream_name, double& duration);
+        virtual int identify_fmle_publish_client(SrsFMLEStartPacket* req, std::string app, SrsRtmpConnType& type, std::string& stream_name);
+        virtual int identify_flash_publish_client(SrsPublishPacket* req, std::string app, SrsRtmpConnType& type, std::string& stream_name);
     private:
-        virtual int identify_play_client(SrsPlayPacket* req, SrsRtmpConnType& type, std::string& stream_name, double& duration);
+        virtual int identify_play_client(SrsPlayPacket* req, std::string app, SrsRtmpConnType& type, std::string& stream_name, double& duration);
     private:
-        virtual int parse_url_by_app();
+        virtual std::string parse_stream_name(std::string app, std::string org_stream_name);
 };
 
 #endif
