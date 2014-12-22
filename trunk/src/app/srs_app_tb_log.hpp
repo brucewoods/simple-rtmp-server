@@ -101,7 +101,7 @@ class SrsTbLog : public ITbLog
         virtual void global_log(int log_level, const char* fmt, ...);
     private:
         virtual bool generate_header(const char* level_name, int* header_size);
-        virtual void write_log(bool is_except, char* str_log, int size, int level);
+        virtual void write_log(char* str_log, int size, int level);
         virtual void open_log_file();
         virtual void open_wf_log_file();
 };
