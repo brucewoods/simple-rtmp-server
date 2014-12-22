@@ -31,22 +31,22 @@ class SrsSource;
 
 class SrsConnStatTimer : public SrsTimer
 {
-	public:
-		SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn);
-		~SrsConnStatTimer();
+    public:
+        SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn);
+        ~SrsConnStatTimer();
 
-		virtual void callback();
-	private:
-		SrsRtmpConn* rtmp_conn;
+        virtual void callback();
+    private:
+        SrsRtmpConn* rtmp_conn;
 };
 
 class SrsGlobalStatTimer : public SrsTimer
 {
-	public:
-		SrsGlobalStatTimer(int _interval);
-		~SrsGlobalStatTimer();
-		virtual void callback();
-	private:
+    public:
+        SrsGlobalStatTimer(int _interval);
+        ~SrsGlobalStatTimer();
+        virtual void callback();
+    private:
 };
 
 #endif

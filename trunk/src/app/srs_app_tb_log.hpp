@@ -59,10 +59,10 @@ const std::string LOGTYPE_GLOBAL_STAT = "global_stat";
 
 class SrsIdAlloc
 {
-	private:
-	public:
-		static int64_t generate_log_id();
-		static int64_t generate_conn_id();
+    private:
+    public:
+        static int64_t generate_log_id();
+        static int64_t generate_conn_id();
 };
 
 /**
@@ -75,35 +75,35 @@ class SrsRequest;
 
 class SrsTbLog : public ITbLog
 {
-	// for utest to override
-	protected:
-		// defined in SrsLogLevel.
-		int _level;
-	private:
-		char* log_data;
-		// log to file if specified srs_log_file
-		int fd;
-		// exception log
-		int wf_fd;
-		// whether log to file tank
-		bool log_to_file_tank;
-	public:
-		SrsTbLog();
-		virtual ~SrsTbLog();
-	public:
-		virtual int initialize();
-		virtual void debug(const char* fmt, ...);
-		virtual void notice(const char* fmt, ...);
-		virtual void warn(const char* fmt, ...);
-		virtual void error(const char* fmt, ...);
-		virtual void fatal(const char* fmt, ...);
-		virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...);
-		virtual void global_log(int log_level, const char* fmt, ...);
-	private:
-		virtual bool generate_header(const char* level_name, int* header_size);
-		virtual void write_log(char* str_log, int size, int level);
-		virtual void open_log_file();
-		virtual void open_wf_log_file();
+    // for utest to override
+    protected:
+        // defined in SrsLogLevel.
+        int _level;
+    private:
+        char* log_data;
+        // log to file if specified srs_log_file
+        int fd;
+        // exception log
+        int wf_fd;
+        // whether log to file tank
+        bool log_to_file_tank;
+    public:
+        SrsTbLog();
+        virtual ~SrsTbLog();
+    public:
+        virtual int initialize();
+        virtual void debug(const char* fmt, ...);
+        virtual void notice(const char* fmt, ...);
+        virtual void warn(const char* fmt, ...);
+        virtual void error(const char* fmt, ...);
+        virtual void fatal(const char* fmt, ...);
+        virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...);
+        virtual void global_log(int log_level, const char* fmt, ...);
+    private:
+        virtual bool generate_header(const char* level_name, int* header_size);
+        virtual void write_log(char* str_log, int size, int level);
+        virtual void open_log_file();
+        virtual void open_wf_log_file();
 };
 
 #endif

@@ -187,7 +187,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define ERROR_HTTP_ERROR_RETURNED           3051
 #define ERROR_HTTP_ON_CONNECT_AUTH_FAIL     3052
 
-#define ERROR_USER_ARGS						4000
+#define ERROR_USER_ARGS                        4000
 
 /**
 * whether the error code is an system control error.

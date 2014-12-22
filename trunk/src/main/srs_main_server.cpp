@@ -62,82 +62,82 @@ SrsServer* _srs_server = new SrsServer();
 void show_macro_features()
 {
 #ifdef SRS_AUTO_SSL
-	srs_trace("rtmp handshake: on");
+    srs_trace("rtmp handshake: on");
 #else
-	srs_warn("rtmp handshake: off");
+    srs_warn("rtmp handshake: off");
 #endif
 
 #ifdef SRS_AUTO_HLS
-	srs_trace("hls: on");
+    srs_trace("hls: on");
 #else
-	srs_warn("hls: off");
+    srs_warn("hls: off");
 #endif
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
-	srs_trace("http callback: on");
+    srs_trace("http callback: on");
 #else
-	srs_warn("http callback: off");
+    srs_warn("http callback: off");
 #endif
 
 #ifdef SRS_AUTO_HTTP_API
-	srs_trace("http api: on");
+    srs_trace("http api: on");
 #else
-	srs_warn("http api: off");
+    srs_warn("http api: off");
 #endif
 
 #ifdef SRS_AUTO_HTTP_SERVER
-	srs_trace("http server: on");
+    srs_trace("http server: on");
 #else
-	srs_warn("http server: off");
+    srs_warn("http server: off");
 #endif
 
 #ifdef SRS_AUTO_HTTP_PARSER
-	srs_trace("http parser: on");
+    srs_trace("http parser: on");
 #else
-	srs_warn("http parser: off");
+    srs_warn("http parser: off");
 #endif
 
 #ifdef SRS_AUTO_DVR
-	srs_trace("dvr: on");
+    srs_trace("dvr: on");
 #else
-	srs_warn("dvr: off");
+    srs_warn("dvr: off");
 #endif
 
 #ifdef SRS_AUTO_TRANSCODE
-	srs_trace("transcode: on");
+    srs_trace("transcode: on");
 #else
-	srs_warn("transcode: off");
+    srs_warn("transcode: off");
 #endif
 
 #ifdef SRS_AUTO_INGEST
-	srs_trace("ingest: on");
+    srs_trace("ingest: on");
 #else
-	srs_warn("ingest: off");
+    srs_warn("ingest: off");
 #endif
 
 #ifdef SRS_AUTO_STAT
-	srs_trace("system stat: on");
+    srs_trace("system stat: on");
 #else
-	srs_warn("system stat: off");
+    srs_warn("system stat: off");
 #endif
 
 #ifdef SRS_AUTO_NGINX
-	srs_trace("compile nginx: on");
+    srs_trace("compile nginx: on");
 #else
-	srs_warn("compile nginx: off");
+    srs_warn("compile nginx: off");
 #endif
 
 #ifdef SRS_AUTO_FFMPEG_TOOL
-	srs_trace("compile ffmpeg: on");
+    srs_trace("compile ffmpeg: on");
 #else
-	srs_warn("compile ffmpeg: off");
+    srs_warn("compile ffmpeg: off");
 #endif
 }
 
 void check_macro_features()
 {
 #if VERSION_MAJOR > 1
-	srs_warn("SRS %s is develop branch, please use %s instead", RTMP_SIG_SRS_VERSION, RTMP_SIG_SRS_RELEASE);
+    srs_warn("SRS %s is develop branch, please use %s instead", RTMP_SIG_SRS_VERSION, RTMP_SIG_SRS_RELEASE);
 #endif
 }
 
@@ -146,48 +146,48 @@ void check_macro_features()
  */
 int main(int argc, char** argv) 
 {
-	int ret = ERROR_SUCCESS;
+    int ret = ERROR_SUCCESS;
 
-	// TODO: support both little and big endian.
-	srs_assert(srs_is_little_endian());
+    // TODO: support both little and big endian.
+    srs_assert(srs_is_little_endian());
 
-	// for gperf gmp or gcp, 
-	// should never enable it when not enabled for performance issue.
+    // for gperf gmp or gcp, 
+    // should never enable it when not enabled for performance issue.
 #ifdef SRS_AUTO_GPERF_MP
-	HeapProfilerStart("gperf.srs.gmp");
+    HeapProfilerStart("gperf.srs.gmp");
 #endif
 #ifdef SRS_AUTO_GPERF_CP
-	ProfilerStart("gperf.srs.gcp");
+    ProfilerStart("gperf.srs.gcp");
 #endif
 
-	// directly compile error when these two macro defines.
+    // directly compile error when these two macro defines.
 #if defined(SRS_AUTO_GPERF_MC) && defined(SRS_AUTO_GPERF_MP)
 #error ("option --with-gmc confict with --with-gmp, "
-		"@see: http://google-perftools.googlecode.com/svn/trunk/doc/heap_checker.html\n"
-		"Note that since the heap-checker uses the heap-profiling framework internally, "
-		"it is not possible to run both the heap-checker and heap profiler at the same time");
+        "@see: http://google-perftools.googlecode.com/svn/trunk/doc/heap_checker.html\n"
+        "Note that since the heap-checker uses the heap-profiling framework internally, "
+        "it is not possible to run both the heap-checker and heap profiler at the same time");
 #endif
 
 // never use srs log(srs_trace, srs_error, etc) before config parse the option,
 // which will load the log config and apply it.
 if ((ret = _srs_config->parse_options(argc, argv)) != ERROR_SUCCESS) {
-	tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=config_parse_options_failed", SrsIdAlloc::generate_log_id(), \
-			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-	return ret;
+    tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=config_parse_options_failed", SrsIdAlloc::generate_log_id(), \
+            TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+    return ret;
 }
 
 // config parsed, initialize log.
 if ((ret = _srs_log->initialize()) != ERROR_SUCCESS) {
-	tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_log_failed", SrsIdAlloc::generate_log_id(), \
-			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-	return ret;
+    tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_log_failed", SrsIdAlloc::generate_log_id(), \
+            TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+    return ret;
 }
 
 // we check the config when the log initialized.
 if ((ret = _srs_config->check_config()) != ERROR_SUCCESS) {
-	tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=check_config_failed", SrsIdAlloc::generate_log_id(), \
-			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-	return ret;
+    tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=check_config_failed", SrsIdAlloc::generate_log_id(), \
+            TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+    return ret;
 }
 
 srs_trace("srs(simple-rtmp-server) "RTMP_SIG_SRS_VERSION);
@@ -211,7 +211,7 @@ check_macro_features();
 // for special features.
 #ifdef SRS_AUTO_HTTP_SERVER
 srs_warn("http server is dev feature, "
-		"@see https://github.com/winlinvip/simple-rtmp-server/wiki/v1_CN_HTTPServer#feature");
+        "@see https://github.com/winlinvip/simple-rtmp-server/wiki/v1_CN_HTTPServer#feature");
 #endif
 
 /**
@@ -220,9 +220,9 @@ srs_warn("http server is dev feature, "
  * all initialize will done in this stage.
  */
 if ((ret = _srs_server->initialize()) != ERROR_SUCCESS) {
-	tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_failed", SrsIdAlloc::generate_log_id(), \
-			TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-	return ret;
+    tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_failed", SrsIdAlloc::generate_log_id(), \
+            TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+    return ret;
 }
 
 return run();
@@ -230,101 +230,101 @@ return run();
 
 int run()
 {
-	// if not deamon, directly run master.
-	if (!_srs_config->get_deamon()) {
-		return run_master();
-	}
+    // if not deamon, directly run master.
+    if (!_srs_config->get_deamon()) {
+        return run_master();
+    }
 
-	srs_trace("start deamon mode...");
+    srs_trace("start deamon mode...");
 
-	int pid = fork();
+    int pid = fork();
 
-	if(pid < 0) {
-		srs_error("create process error. ret=-1"); //ret=0
-		return -1;
-	}
+    if(pid < 0) {
+        srs_error("create process error. ret=-1"); //ret=0
+        return -1;
+    }
 
-	// grandpa
-	if(pid > 0) {
-		int status = 0;
-		if(waitpid(pid, &status, 0) == -1) {
-			srs_error("wait child process error! ret=-1"); //ret=0
-		}
-		srs_trace("grandpa process exit.");
-		exit(0);
-	}
+    // grandpa
+    if(pid > 0) {
+        int status = 0;
+        if(waitpid(pid, &status, 0) == -1) {
+            srs_error("wait child process error! ret=-1"); //ret=0
+        }
+        srs_trace("grandpa process exit.");
+        exit(0);
+    }
 
-	// father
-	pid = fork();
+    // father
+    pid = fork();
 
-	if(pid < 0) {
-		srs_error("create process error. ret=0");
-		return -1;
-	}
+    if(pid < 0) {
+        srs_error("create process error. ret=0");
+        return -1;
+    }
 
-	if(pid > 0) {
-		srs_trace("father process exit. ret=0");
-		exit(0);
-	}
+    if(pid > 0) {
+        srs_trace("father process exit. ret=0");
+        exit(0);
+    }
 
-	// son
-	srs_trace("son(deamon) process running.");
+    // son
+    srs_trace("son(deamon) process running.");
 
-	return run_master();
+    return run_master();
 }
 
 int run_master()
 {
-	int ret = ERROR_SUCCESS;
+    int ret = ERROR_SUCCESS;
 
-	if ((ret = _srs_server->initialize_signal()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_signal_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->initialize_signal()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_init_signal_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->acquire_pid_file()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=acquire_pid_file_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->acquire_pid_file()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=acquire_pid_file_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->initialize_st()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_st_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->initialize_st()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=init_st_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->start_timer_manager()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=start_timermgr_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->start_timer_manager()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=start_timermgr_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->listen()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_listen_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->listen()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_listen_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->register_signal()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=register_signal_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->register_signal()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=register_signal_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->ingest()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=ingest_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->ingest()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=ingest_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	if ((ret = _srs_server->cycle()) != ERROR_SUCCESS) {
-		tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_cycle_failed", SrsIdAlloc::generate_log_id(), \
-				TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
-		return ret;
-	}
+    if ((ret = _srs_server->cycle()) != ERROR_SUCCESS) {
+        tb_fatal("logid=%lld %s file=%s line=%d errno=%d errmsg=server_cycle_failed", SrsIdAlloc::generate_log_id(), \
+                TB_LOG_COMMON_ITEM.c_str(), __FILE__, __LINE__, ret);
+        return ret;
+    }
 
-	return 0;
+    return 0;
 }
 
