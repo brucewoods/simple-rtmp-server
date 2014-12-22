@@ -529,109 +529,113 @@ int SrsRtmpConn::stream_service_cycle()
     source->set_cache(enabled_cache);
 
     switch (type) {
-        case SrsRtmpConnPlay: {
-                                  srs_verbose("start to play stream %s.", req->stream.c_str());
+        case SrsRtmpConnPlay:
+        {
+            srs_verbose("start to play stream %s.", req->stream.c_str());
 
-                                  if (vhost_is_edge) {
-                                      // notice edge to start for the first client.
-                                      if ((ret = source->on_edge_start_play()) != ERROR_SUCCESS) {
-                                          srs_error("notice edge start play stream failed. ret=%d", ret);
-                                          _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
-                                          _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                                          return ret;
-                                      }
-                                  }
+            if (vhost_is_edge) {
+                // notice edge to start for the first client.
+                if ((ret = source->on_edge_start_play()) != ERROR_SUCCESS) {
+                    srs_error("notice edge start play stream failed. ret=%d", ret);
+                    _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=notice_edge_start_play_failed", __FILE__, __LINE__, ret);
+                    _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+                    return ret;
+                }
+            }
 
-                                  // response connection start play
-                                  if ((ret = rtmp->start_play(res->stream_id)) != ERROR_SUCCESS) {
-                                      srs_error("start to play stream failed. ret=%d", ret);
-                                      _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
-                                      _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                                      return ret;
-                                  }
-                                  if ((ret = http_hooks_on_play()) != ERROR_SUCCESS) {
-                                      srs_error("http hook on_play failed. ret=%d", ret);
-                                      _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
-                                      _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                                      return ret;
-                                  }
+            // response connection start play
+            if ((ret = rtmp->start_play(res->stream_id)) != ERROR_SUCCESS) {
+                srs_error("start to play stream failed. ret=%d", ret);
+                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=start_play_failed", __FILE__, __LINE__, ret);
+                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+                return ret;
+            }
+            if ((ret = http_hooks_on_play()) != ERROR_SUCCESS) {
+                srs_error("http hook on_play failed. ret=%d", ret);
+                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=hook_on_play_failed", __FILE__, __LINE__, ret);
+                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+                return ret;
+            }
 
-                                  srs_info("start to play stream %s success", req->stream.c_str());
-                                  tb_debug("start to play stream %s success", req->stream.c_str());
-                                  ret = playing(source);
-                                  http_hooks_on_stop();
+            srs_info("start to play stream %s success", req->stream.c_str());
+            tb_debug("start to play stream %s success", req->stream.c_str());
+            ret = playing(source);
+            http_hooks_on_stop();
 
-                                  return ret;
-                              }
-        case SrsRtmpConnFMLEPublish: {
-                                         srs_verbose("FMLE start to publish stream %s.", req->stream.c_str());
+            return ret;
+        }
+        case SrsRtmpConnFMLEPublish:
+        {
+            srs_verbose("FMLE start to publish stream %s.", req->stream.c_str());
 
-                                         if (vhost_is_edge) {
-                                             if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
-                                                 srs_error("notice edge start publish stream failed. ret=%d", ret);
-                                                 return ret;
-                                             }
-                                         }
+            if (vhost_is_edge) {
+                if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
+                    srs_error("notice edge start publish stream failed. ret=%d", ret);
+                    return ret;
+                }
+            }
 
-                                         if ((ret = rtmp->start_fmle_publish(res->stream_id)) != ERROR_SUCCESS) {
-                                             srs_error("start to publish stream failed. ret=%d", ret);
-                                             return ret;
-                                         }
+            if ((ret = rtmp->start_fmle_publish(res->stream_id)) != ERROR_SUCCESS) {
+                srs_error("start to publish stream failed. ret=%d", ret);
+                return ret;
+            }
 
-                                         if (!vhost_is_edge) {
-                                             if ((ret = source->acquire_publish()) != ERROR_SUCCESS) {
-                                                 return ret;
-                                             }
-                                         }
+            if (!vhost_is_edge) {
+                if ((ret = source->acquire_publish()) != ERROR_SUCCESS) {
+                    return ret;
+                }
+            }
 
-                                         ret = fmle_publishing(source);
+            ret = fmle_publishing(source);
 
-                                         if (!vhost_is_edge) {
-                                             source->release_publish();
-                                         }
+            if (!vhost_is_edge) {
+                source->release_publish();
+            }
 
-                                         return ret;
-                                     }
-        case SrsRtmpConnFlashPublish: {
-                                          srs_verbose("flash start to publish stream %s.", req->stream.c_str());
+            return ret;
+        }
+        case SrsRtmpConnFlashPublish:
+        {
+            srs_verbose("flash start to publish stream %s.", req->stream.c_str());
 
-                                          if (vhost_is_edge) {
-                                              if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
-                                                  srs_error("notice edge start publish stream failed. ret=%d", ret);
-                                                  _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
-                                                  _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                                                  return ret;
-                                              }
-                                          }
+            if (vhost_is_edge) {
+                if ((ret = source->on_edge_start_publish()) != ERROR_SUCCESS) {
+                    srs_error("notice edge start publish stream failed. ret=%d", ret);
+                    _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=edge_start_publish_stream_failed", __FILE__, __LINE__, ret);
+                    _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+                    return ret;
+                }
+            }
 
-                                          if ((ret = rtmp->start_flash_publish(res->stream_id)) != ERROR_SUCCESS) {
-                                              srs_error("flash start to publish stream failed. ret=%d", ret);
-                                              _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
-                                              _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                                              return ret;
-                                          }
+            if ((ret = rtmp->start_flash_publish(res->stream_id)) != ERROR_SUCCESS) {
+                srs_error("flash start to publish stream failed. ret=%d", ret);
+                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=flash_start_publish_stream_failed", __FILE__, __LINE__, ret);
+                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+                return ret;
+            }
 
-                                          if (!vhost_is_edge) {
-                                              if ((ret = source->acquire_publish()) != ERROR_SUCCESS) {
-                                                  return ret;
-                                              }
-                                          }
+            if (!vhost_is_edge) {
+                if ((ret = source->acquire_publish()) != ERROR_SUCCESS) {
+                    return ret;
+                }
+            }
 
-                                          ret = flash_publishing(source);
+            ret = flash_publishing(source);
 
-                                          if (!vhost_is_edge) {
-                                              source->release_publish();
-                                          }
+            if (!vhost_is_edge) {
+                source->release_publish();
+            }
 
-                                          return ret;
-                                      }
-        default: {
-                     ret = ERROR_SYSTEM_CLIENT_INVALID;
-                     srs_info("invalid client type=%d. ret=%d", type, ret);
-                     _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=invalid_client_type", __FILE__, __LINE__, ret);
-                     _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
-                     return ret;
-                 }
+            return ret;
+        }
+        default:
+        {
+            ret = ERROR_SYSTEM_CLIENT_INVALID;
+            srs_info("invalid client type=%d. ret=%d", type, ret);
+            _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=invalid_client_type", __FILE__, __LINE__, ret);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_CREATE_STREAM, req, "errno=%d", ret);
+            return ret;
+        }
     }
 
     return ret;
