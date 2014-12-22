@@ -884,8 +884,8 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
         req->client_info->group_id = atoll(prop->to_str().c_str());
     }
 
-    if ((prop = pkt->command_object->ensure_property_number("identity")) != NULL) {
-        req->client_info->user_role = prop->to_number();
+    if ((prop = pkt->command_object->ensure_property_string("identity")) != NULL) {
+        req->client_info->user_role = atoi(prop->to_str().c_str());
     }
 
     if (pkt->args) {
