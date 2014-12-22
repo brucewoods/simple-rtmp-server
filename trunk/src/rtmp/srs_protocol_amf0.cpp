@@ -601,7 +601,7 @@ void SrsAmf0Object::print_properties()
 		SrsAmf0Any* any = this->value_at(i);
 		if (any->is_boolean())
 		{
-			tb_debug("value = %d", any->to_number());
+			tb_debug("value = %d", any->to_boolean());
 		}
 		else if (any->is_number())
 		{
