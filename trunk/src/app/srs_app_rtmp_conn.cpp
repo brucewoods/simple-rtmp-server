@@ -458,7 +458,7 @@ int SrsRtmpConn::stream_service_cycle()
     int ret = ERROR_SUCCESS;
 
     SrsRtmpConnType type;
-    if ((ret = rtmp->identify_client(res->stream_id, type, req->stream, req->duration)) != ERROR_SUCCESS) {
+    if ((ret = rtmp->identify_client(res->stream_id, req->app, type, req->stream, req->duration)) != ERROR_SUCCESS) {
         if (!srs_is_client_gracefully_close(ret)) {
             srs_error("identify client failed. ret=%d", ret);
             _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=identify_client_failed", __FILE__, __LINE__, ret);
