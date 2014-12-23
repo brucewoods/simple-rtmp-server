@@ -325,7 +325,7 @@ void SrsFastLog::write_log(int& fd, char *str_log, int size, int level)
     size = srs_min(LOG_MAX_SIZE - 1 - LOG_TAIL_SIZE, size);
     
     // add some to the end of char.
-    str_log[size++] = '\r';
+    str_log[size++] = '\n';
     str_log[size++] = 0;
     
     // if not to file, to console and return.
