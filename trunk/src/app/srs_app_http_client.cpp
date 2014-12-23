@@ -174,11 +174,11 @@ int SrsHttpClient::connect(SrsHttpUri* uri)
     return ret;
 }
 
-int SrsHttpClient::set_recv_timeout(int64_t timeout_us) {
+void SrsHttpClient::set_recv_timeout(int64_t timeout_us) {
     recv_timeout = timeout_us;
 }
 
-int SrsHttpClient::set_send_timeout(int64_t timeout_us) {
+void SrsHttpClient::set_send_timeout(int64_t timeout_us) {
     send_timeout = timeout_us;
 }
 

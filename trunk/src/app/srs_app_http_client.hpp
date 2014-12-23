@@ -59,8 +59,8 @@ public:
     * @param res the response data from server.
     */
     virtual int post(SrsHttpUri* uri, std::string req, std::string& res);
-    virtual int set_send_timeout(int64_t timeout_us);
-    virtual int set_recv_timeout(int64_t timeout_us);
+    virtual void set_send_timeout(int64_t timeout_us);
+    virtual void set_recv_timeout(int64_t timeout_us);
 private:
     virtual void disconnect();
     virtual int connect(SrsHttpUri* uri);
