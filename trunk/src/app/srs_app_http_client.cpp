@@ -29,6 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace std;
 
+#include <srs_app_st.hpp>
 #include <srs_app_http.hpp>
 #include <srs_kernel_error.hpp>
 #include <srs_kernel_log.hpp>
@@ -44,6 +45,7 @@ using namespace std;
 
 SrsHttpClient::SrsHttpClient()
 {
+    send_timeout = recv_timeout = ST_UTIME_NO_TIMEOUT;
     connected = false;
     stfd = NULL;
     parser = NULL;
@@ -95,6 +97,8 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
         << req;
     
     SrsStSocket skt(stfd);
+    skt->set_send_timeout(send_timeout);
+    skt->set_recv_timeout(recv_timeout);
     
     std::string data = ss.str();
     retry = SRS_HTTP_DEFAULT_RETRY;
@@ -168,6 +172,14 @@ int SrsHttpClient::connect(SrsHttpUri* uri)
     connected = true;
     
     return ret;
+}
+
+int SrsHttpClient::set_recv_timeout(int64_t timeout_us) {
+    recv_timeout = timeout_us;
+}
+
+int SrsHttpClient::set_send_timeout(int64_t timeout_us) {
+    send_timeout = timeout_us;
 }
 
 #endif

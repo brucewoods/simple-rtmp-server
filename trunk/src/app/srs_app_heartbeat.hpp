@@ -35,41 +35,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class SrsRequest;
 
-#ifdef SRS_AUTO_HTTP_PARSER
-
-/**
-* the http heartbeat to api-server to notice api
-* that the information of SRS.
-*/
-class SrsHttpHeartbeat
-{
-public:
-    SrsHttpHeartbeat();
-    virtual ~SrsHttpHeartbeat();
-public:
-    virtual void heartbeat();
-};
-
 
 /**
 * the http heartbeat to notice im server
 * that a stream is still publishing
 */
-class SrsConnHeartbeat: public SrsTimer, public ISrsThreadHandler {
+class SrsConnHeartbeat: public ISrsThreadHandler {
 private:
     SrsThread* pthread;
     SrsRequest* req;
     std::string ip;
 public:
-    SrsConnHeartbeat(int _interval, SrsRequest* _req, std::string _ip);
+    SrsConnHeartbeat(SrsRequest* _req, std::string _ip);
+    virtual ~SrsConnHeartbeat();
 public:
     virtual void callback();
 public:
     virtual int cycle();
 };
-
-#endif
-
 
 #endif
 
