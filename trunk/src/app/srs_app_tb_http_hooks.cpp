@@ -143,8 +143,8 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_connect uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -235,8 +235,8 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -305,8 +305,8 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_unpublish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -375,8 +375,8 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_error_close uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -444,8 +444,8 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish_pause uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -514,8 +514,8 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish_resume uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -583,8 +583,8 @@ int SrsTbHttpHooks::on_heartbeat(string url, int client_id, string ip, SrsReques
     std::string res;
 
     SrsHttpClient http;
-    http->set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
-    http->set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_heartbeat uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
