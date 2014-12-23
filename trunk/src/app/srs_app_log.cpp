@@ -326,10 +326,10 @@ void SrsFastLog::write_log(int& fd, char *str_log, int size, int level)
     
     // add some to the end of char.
     str_log[size++] = '\n';
-    str_log[size++] = 0;
     
     // if not to file, to console and return.
     if (!log_to_file_tank) {
+        str_log[size++] = 0;
         // if is error msg, then print color msg.
         // \033[31m : red text code in shell
         // \033[32m : green text code in shell
