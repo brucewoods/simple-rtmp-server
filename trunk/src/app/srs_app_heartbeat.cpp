@@ -42,6 +42,66 @@ using namespace std;
 // conn heartbeat to im srv interval
 #define SRS_CONN_HEARTBEAT_INTERVAL_US (int64_t)(9500*1000LL)
 
+#ifdef SRS_AUTO_HTTP_PARSER
+
+SrsHttpHeartbeat::SrsHttpHeartbeat()
+{
+}
+
+SrsHttpHeartbeat::~SrsHttpHeartbeat()
+{
+    srs_freep(pthread);
+}
+
+
+
+void SrsHttpHeartbeat::heartbeat()
+{
+    int ret = ERROR_SUCCESS;
+
+    std::string url = _srs_config->get_heartbeat_url();
+
+    SrsHttpUri uri;
+    if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
+        srs_error("http uri parse hartbeart url failed. url=%s, ret=%d", url.c_str(), ret);
+        return;
+    }
+
+    std::string ip = "";
+    std::string device_id = _srs_config->get_heartbeat_device_id();
+
+    vector<string>& ips = srs_get_local_ipv4_ips();
+    if (!ips.empty()) {
+        ip = ips[_srs_config->get_stats_network() % (int)ips.size()];
+    }
+
+    std::stringstream ss;
+    ss << __SRS_JOBJECT_START
+            << __SRS_JFIELD_STR("device_id", device_id) << __SRS_JFIELD_CONT
+            << __SRS_JFIELD_STR("ip", ip);
+    if (_srs_config->get_heartbeat_summaries()) {
+        ss << __SRS_JFIELD_CONT << __SRS_JFIELD_ORG("summaries", "");
+        srs_api_dump_summaries(ss);
+    }
+    ss << __SRS_JOBJECT_END;
+    std::string data = ss.str();
+    std::string res;
+
+    SrsHttpClient http;
+    if ((ret = http.post(&uri, data, res)) != ERROR_SUCCESS) {
+        srs_info("http post hartbeart uri failed. "
+                "url=%s, request=%s, response=%s, ret=%d",
+                url.c_str(), data.c_str(), res.c_str(), ret);
+        return;
+    }
+
+    srs_info("http hook hartbeart success. "
+            "url=%s, request=%s, response=%s, ret=%d",
+            url.c_str(), data.c_str(), res.c_str(), ret);
+
+    return;
+}
+
 SrsConnHeartbeat::SrsConnHeartbeat(SrsRequest* _req, string _ip) {
     req = _req;
     ip = _ip;
@@ -79,3 +139,5 @@ void SrsConnHeartbeat::callback() {
     pthread->start();
 }
 
+
+#endif

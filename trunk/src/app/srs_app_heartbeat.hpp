@@ -35,6 +35,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class SrsRequest;
 
+#ifdef SRS_AUTO_HTTP_PARSER
+
+/**
+* the http heartbeat to api-server to notice api
+* that the information of SRS.
+*/
+class SrsHttpHeartbeat
+{
+public:
+    SrsHttpHeartbeat();
+    virtual ~SrsHttpHeartbeat();
+public:
+    virtual void heartbeat();
+};
+
 
 /**
 * the http heartbeat to notice im server
@@ -53,6 +68,8 @@ public:
 public:
     virtual int cycle();
 };
+
+#endif
 
 #endif
 
