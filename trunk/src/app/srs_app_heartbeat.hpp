@@ -47,7 +47,7 @@ private:
     std::string ip;
 public:
     SrsConnHeartbeat(SrsRequest* _req, std::string _ip);
-    virtual ~SrsConnHeartbeat();
+    ~SrsConnHeartbeat();
 public:
     virtual void callback();
 public:
