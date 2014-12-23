@@ -50,7 +50,6 @@ SrsHttpHeartbeat::SrsHttpHeartbeat()
 
 SrsHttpHeartbeat::~SrsHttpHeartbeat()
 {
-    srs_freep(pthread);
 }
 
 
