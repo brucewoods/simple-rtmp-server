@@ -97,8 +97,8 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
         << req;
     
     SrsStSocket skt(stfd);
-    skt->set_send_timeout(send_timeout);
-    skt->set_recv_timeout(recv_timeout);
+    skt.set_send_timeout(send_timeout);
+    skt.set_recv_timeout(recv_timeout);
     
     std::string data = ss.str();
     retry = SRS_HTTP_DEFAULT_RETRY;
