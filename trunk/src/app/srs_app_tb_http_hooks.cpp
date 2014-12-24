@@ -45,6 +45,9 @@ using namespace std;
 #define TB_CLIVE_STATUS_PUBLISH_RESUME 9
 #define TB_CLIVE_STATUS_HEARTBEAT 10
 
+#define SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US (int64_t) (250*1000LL)
+#define SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US (int64_t) (250*1000LL)
+
 SrsTbHttpHooks::SrsTbHttpHooks()
 {
 }
@@ -66,7 +69,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
 
     if (res.empty()) {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http hook on_publish validate failed. "
+        srs_error("http hook validate failed. "
             "res=%s, ret=%d", res.c_str(), ret);
         return ret;
     }
@@ -77,7 +80,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
     SrsJsonAny* http_res_tmp = NULL;
     if (!(http_res_tmp = SrsJsonAny::loads(res_str)))  {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http hook on_publish json parse failed. "
+        srs_error("http hook json parse failed. "
             "res=%s, ret=%d", res.c_str(), ret);
         srs_freep(http_res_tmp);
         srs_freep(res_str);
@@ -87,7 +90,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
 
     if (!http_res_tmp->is_object()) {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http hook on_publish json not an object. "
+        srs_error("http hook json not an object. "
             "res=%s, ret=%d", res.c_str(), ret);
         srs_freep(http_res_tmp);
         return ret;
@@ -97,7 +100,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
     SrsJsonAny* _error = http_res->get_property("error");
     if (!_error || !_error->is_integer()) {
         ret = ERROR_HTTP_DATA_INVLIAD;
-        srs_error("http hook on_publish no error field. "
+        srs_error("http hook no error field. "
             "res=%s, ret=%d", res.c_str(), ret);
         //srs_freep(http_res_tmp);
         return ret;
@@ -140,6 +143,8 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_connect uri failed. "
             "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -210,7 +215,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
 
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
-        srs_error("http uri parse on_publish2 url failed. "
+        srs_error("http uri parse on_publish url failed. "
                 "client_id=%d, url=%s, ret=%d", client_id, url.c_str(), ret);
         _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish url=%s file=%s line=%d errno=%d errmsg=parse_url_failed", url.c_str(), __FILE__, __LINE__, ret);
         
@@ -230,8 +235,10 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
-        srs_error("http post on_publish2 uri failed. "
+        srs_error("http post on_publish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                 client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
         _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish url=%s file=%s line=%d errno=%d errmsg=post_url_failed", url.c_str(), __FILE__, __LINE__, ret);
@@ -245,7 +252,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
 
     try {
         if (get_res_data(res, error, http_res, data) != ERROR_SUCCESS) {
-            srs_error("http post on_publish2 parse result failed. "
+            srs_error("http post on_publish parse result failed. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish url=%s file=%s line=%d errno=%d errmsg=get_res_data_failed", url.c_str(), __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
@@ -253,7 +260,7 @@ int SrsTbHttpHooks::on_publish(string url, int client_id, string ip, SrsRequest*
             throw ERROR_HTTP_DATA_INVLIAD;
         }
         if (error != 0) {
-            srs_error("http post on_publish2 error non zero. "
+            srs_error("http post on_publish error non zero. "
                     "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=publish url=%s file=%s line=%d errno=%d errmsg=error_non_zero", url.c_str(), __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
@@ -298,6 +305,8 @@ int SrsTbHttpHooks::on_unpublish(string url, int client_id, string ip, SrsReques
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_unpublish uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -366,6 +375,8 @@ int SrsTbHttpHooks::on_errorclose(string url, int client_id, string ip, SrsReque
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_error_close uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -433,6 +444,8 @@ int SrsTbHttpHooks::on_publish_pause(string url, int client_id, string ip, SrsRe
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish_pause uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -501,6 +514,8 @@ int SrsTbHttpHooks::on_publish_resume(string url, int client_id, string ip, SrsR
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_publish_resume uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
@@ -568,6 +583,8 @@ int SrsTbHttpHooks::on_heartbeat(string url, int client_id, string ip, SrsReques
     std::string res;
 
     SrsHttpClient http;
+    http.set_send_timeout(SRS_HTTP_TB_HOOKS_WRITE_TIMEOUT_US);
+    http.set_recv_timeout(SRS_HTTP_TB_HOOKS_READ_TIMEOUT_US);
     if ((ret = http.post(&uri, postdata, res)) != ERROR_SUCCESS) {
         srs_error("http post on_heartbeat uri failed. "
                 "client_id=%d, url=%s, request=%s, response=%s, ret=%d",

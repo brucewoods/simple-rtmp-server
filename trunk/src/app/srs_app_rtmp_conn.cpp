@@ -78,9 +78,6 @@ using namespace std;
 // to get msgs then totally send out.
 #define SYS_MAX_PLAY_SEND_MSGS 128
 
-// conn heartbeat to im srv interval
-#define SRS_CONN_HEARTBEAT_INTERVAL (int64_t)(10LL)
-
 const int STAT_LOG_INTERVAL = 10;
 
 extern SrsServer* _srs_server;
@@ -942,15 +939,16 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
         return ret;
     }
 
-    //start the heartbeat timer
-    hb_timer = new SrsConnHeartbeat(SRS_CONN_HEARTBEAT_INTERVAL, req, ip);
-    server->timer_manager->regist_timer(hb_timer);
+    //start the heartbeat thread
+    hb_timer = new SrsConnHeartbeat(req, ip);
+    if (hb_timer->start() != ERROR_SUCCESS) {
+        // TODO: write log
+    }
 
     srs_info("flash start to publish stream %s success", req->stream.c_str());
     ret = do_flash_publishing(source);
 
-    //end the heartbeat timer
-    server->timer_manager->remove_timer(hb_timer);
+    //end the heartbeat thread
     srs_freep(hb_timer);
 
     // when edge, notice edge to change state.
