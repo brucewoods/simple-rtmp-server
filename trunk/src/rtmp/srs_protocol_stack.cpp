@@ -1557,42 +1557,44 @@ int SrsProtocol::on_send_packet(SrsMessage* msg, SrsPacket* packet)
     srs_assert(packet);
 
     switch (msg->header.message_type) {
-        case RTMP_MSG_SetChunkSize: {
-                                        SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
-                                        srs_assert(pkt != NULL);
+        case RTMP_MSG_SetChunkSize:
+        {
+            SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
+            srs_assert(pkt != NULL);
 
-                                        out_chunk_size = pkt->chunk_size;
+            out_chunk_size = pkt->chunk_size;
 
-                                        srs_trace("out chunk size to %d", pkt->chunk_size);
-                                        break;
-                                    }
+            srs_trace("out chunk size to %d", pkt->chunk_size);
+            break;
+        }
         case RTMP_MSG_AMF0CommandMessage:
-        case RTMP_MSG_AMF3CommandMessage: {
-                                              if (true) {
-                                                  SrsConnectAppPacket* pkt = dynamic_cast<SrsConnectAppPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              if (true) {
-                                                  SrsCreateStreamPacket* pkt = dynamic_cast<SrsCreateStreamPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              if (true) {
-                                                  SrsFMLEStartPacket* pkt = dynamic_cast<SrsFMLEStartPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              break;
-                                          }
+        case RTMP_MSG_AMF3CommandMessage:
+        {
+            if (true) {
+                SrsConnectAppPacket* pkt = dynamic_cast<SrsConnectAppPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            if (true) {
+                SrsCreateStreamPacket* pkt = dynamic_cast<SrsCreateStreamPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            if (true) {
+                SrsFMLEStartPacket* pkt = dynamic_cast<SrsFMLEStartPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            break;
+        }
         default:
-                                          break;
+            break;
     }
 
     return ret;
