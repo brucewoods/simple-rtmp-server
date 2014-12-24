@@ -134,8 +134,8 @@ int SrsConnHeartbeat::cycle() {
     return ret;
 }
 
-void SrsConnHeartbeat::callback() {
-    pthread->start();
+int SrsConnHeartbeat::start() {
+    return pthread->start();
 }
 
 

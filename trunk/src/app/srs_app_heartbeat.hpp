@@ -64,7 +64,7 @@ public:
     SrsConnHeartbeat(SrsRequest* _req, std::string _ip);
     ~SrsConnHeartbeat();
 public:
-    virtual void callback();
+    virtual int start();
 public:
     virtual int cycle();
 };

@@ -941,6 +941,9 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
 
     //start the heartbeat thread
     hb_timer = new SrsConnHeartbeat(req, ip);
+    if (hb_timer->start() != ERROR_SUCCESS) {
+        // TODO: write log
+    }
 
     srs_info("flash start to publish stream %s success", req->stream.c_str());
     ret = do_flash_publishing(source);
