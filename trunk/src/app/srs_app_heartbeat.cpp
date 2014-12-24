@@ -104,7 +104,7 @@ void SrsHttpHeartbeat::heartbeat()
 SrsConnHeartbeat::SrsConnHeartbeat(SrsRequest* _req, string _ip) {
     req = _req;
     ip = _ip;
-    pthread = new SrsThread(this, SRS_CONN_HEARTBEAT_INTERVAL_US, false);
+    pthread = new SrsThread(this, SRS_CONN_HEARTBEAT_INTERVAL_US, true);
 }
 
 SrsConnHeartbeat::~SrsConnHeartbeat() {
