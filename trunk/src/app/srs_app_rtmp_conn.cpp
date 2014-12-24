@@ -1079,7 +1079,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
 
     //remove stat timer
     if (stat_timer != NULL){
-        _srs_server->timer_manager->regist_timer(stat_timer);
+        _srs_server->timer_manager->remove_timer(stat_timer);
     }
     srs_freep(stat_timer);
 
