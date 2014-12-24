@@ -46,8 +46,8 @@ const char TB_LOG_TAIL = '\n';
 const int TB_LOG_TAIL_SIZE = 1;
 
 //log file
-const std::string TB_LOG_FILE = "logs/tb_live.log";
-const std::string TB_WF_LOG_FILE = "logs/tb_live.log.wf";
+const std::string TB_LOG_FILE = "log/rtmpsrv.log";
+const std::string TB_WF_LOG_FILE = "log/rtmpsrv.log.wf";
 
 
 const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs";
