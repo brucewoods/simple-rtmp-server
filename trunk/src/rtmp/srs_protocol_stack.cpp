@@ -4124,4 +4124,7 @@ int SrsUserControlPacket::encode_packet(SrsStream* stream)
     return ret;
 }
 
+SrsPingRequestPacket::SrsPingRequestPacket(int timestamp=0) {
+    event_data = (int32_t)timestamp;
+}
 

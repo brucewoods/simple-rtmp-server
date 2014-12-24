@@ -36,6 +36,7 @@
 #include <srs_kernel_log.hpp>
 #include <srs_kernel_error.hpp>
 #include <srs_kernel_consts.hpp>
+#include <srs_kernel_stream.hpp>
 
 class ISrsProtocolReaderWriter;
 class SrsBuffer;
@@ -1616,6 +1617,22 @@ class SrsUserControlPacket : public SrsPacket
     protected:
         virtual int get_size();
         virtual int encode_packet(SrsStream* stream);
+};
+
+class SrsPingRequestPacket : public SrsUserControlPacket {
+public:
+    SrsPingRequestPacket(int timestamp);
+    virtual ~SrsPingRequestPacket();
+protected:
+    virtual int encode_packet(SrsStream* stream);
+};
+
+class SrsPingResponsePacket : public SrsUserControlPacket {
+public:
+    SrsPingResponsePacket(int timestamp);
+    virtual ~SrsPingResponsePacket();
+protected:
+    virtual int encode_packet(SrsStream* stream);
 };
 
 #endif
