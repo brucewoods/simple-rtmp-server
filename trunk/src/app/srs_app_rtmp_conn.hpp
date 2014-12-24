@@ -37,6 +37,8 @@
 #include <string>
 using namespace std;
 
+const int64_t MIN_STREAM_BYTES = 1000;
+
 class SrsRtmpServer;
 class SrsRequest;
 class SrsResponse;
