@@ -72,7 +72,7 @@ SrsTimerMgr::SrsTimerMgr(SrsServer* srs_server) {
     timer_id_alloc = 0;
     server = srs_server;
 
-    pthread = new SrsThread(this, 1*1000*1000LL, false);
+    pthread = new SrsThread(this, 1*1000*1000LL, true);
 }
 
 SrsTimerMgr::~SrsTimerMgr() {
