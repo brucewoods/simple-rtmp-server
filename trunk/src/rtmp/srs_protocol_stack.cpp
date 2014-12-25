@@ -1533,12 +1533,12 @@ int SrsProtocol::on_recv_message(SrsMessage* msg)
             srs_assert(pkt != NULL);
 
             if (pkt->event_type == SrcPCUCSetBufferLength) {
-              srs_trace("ignored. set buffer length to %d", pkt->extra_data);
+                srs_trace("ignored. set buffer length to %d", pkt->extra_data);
             }
             if (pkt->event_type == SrcPCUCPingRequest) {
-              if ((ret = response_ping_message(pkt->event_data)) != ERROR_SUCCESS) {
+                if ((ret = response_ping_message(pkt->event_data)) != ERROR_SUCCESS) {
                   return ret;
-              }
+                }
             }
             break;
         }
@@ -4127,4 +4127,3 @@ int SrsUserControlPacket::encode_packet(SrsStream* stream)
 SrsPingRequestPacket::SrsPingRequestPacket(int timestamp=0) {
     event_data = (int32_t)timestamp;
 }
-

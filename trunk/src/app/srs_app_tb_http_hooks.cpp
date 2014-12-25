@@ -108,8 +108,8 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
     error = (int)(_error->to_integer());
 
     SrsJsonAny* _data = http_res->get_property("data");
-    if (!_data || !_data->is_object()) { // ok, no data field
-        data = NULL;
+    if (!_data || !_data->is_object()) { //there must be data fields
+        return ERROR_HTTP_DATA_INVLIAD;
     } else {
         data = _data->to_object();
     }
