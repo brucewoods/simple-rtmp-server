@@ -477,6 +477,18 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
+    if (is_edge)
+    {
+        req->client_info->user_role = E_Edge;
+    }
+    else if (type == SrsRtmpConnPlay)
+    {
+        req->client_info->user_role = E_Player;
+    }
+    else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
+    {
+        req->client_info->user_role = E_Publisher;
+    }
     /*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
       {
       conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=get_client_info_failed", __FILE__, __LINE__, ret);
