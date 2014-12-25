@@ -1489,58 +1489,61 @@ int SrsProtocol::on_recv_message(SrsMessage* msg)
     SrsAutoFree(SrsPacket, packet);
 
     switch (msg->header.message_type) {
-        case RTMP_MSG_WindowAcknowledgementSize: {
-                                                     SrsSetWindowAckSizePacket* pkt = dynamic_cast<SrsSetWindowAckSizePacket*>(packet);
-                                                     srs_assert(pkt != NULL);
+        case RTMP_MSG_WindowAcknowledgementSize:
+        {
+            SrsSetWindowAckSizePacket* pkt = dynamic_cast<SrsSetWindowAckSizePacket*>(packet);
+            srs_assert(pkt != NULL);
 
-                                                     if (pkt->ackowledgement_window_size > 0) {
-                                                         in_ack_size.ack_window_size = pkt->ackowledgement_window_size;
-                                                         // @remakr, we ignore this message, for user noneed to care.
-                                                         // but it's important for dev, for client/server will block if required 
-                                                         // ack msg not arrived.
-                                                         srs_info("set ack window size to %d", pkt->ackowledgement_window_size);
-                                                     } else {
-                                                         srs_warn("ignored. set ack window size is %d", pkt->ackowledgement_window_size);
-                                                     }
-                                                     break;
-                                                 }
-        case RTMP_MSG_SetChunkSize: {
-                                        SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
-                                        srs_assert(pkt != NULL);
+            if (pkt->ackowledgement_window_size > 0) {
+             in_ack_size.ack_window_size = pkt->ackowledgement_window_size;
+             // @remakr, we ignore this message, for user noneed to care.
+             // but it's important for dev, for client/server will block if required
+             // ack msg not arrived.
+             srs_info("set ack window size to %d", pkt->ackowledgement_window_size);
+            } else {
+             srs_warn("ignored. set ack window size is %d", pkt->ackowledgement_window_size);
+            }
+            break;
+        }
+        case RTMP_MSG_SetChunkSize:
+        {
+            SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
+            srs_assert(pkt != NULL);
 
-                                        // for some server, the actual chunk size can greater than the max value(65536),
-                                        // so we just warning the invalid chunk size, and actually use it is ok,
-                                        // @see: https://github.com/winlinvip/simple-rtmp-server/issues/160
-                                        if (pkt->chunk_size < SRS_CONSTS_RTMP_MIN_CHUNK_SIZE 
-                                                || pkt->chunk_size > SRS_CONSTS_RTMP_MAX_CHUNK_SIZE) 
-                                        {
-                                            srs_warn("accept chunk size %d, but should in [%d, %d], "
-                                                    "@see: https://github.com/winlinvip/simple-rtmp-server/issues/160",
-                                                    pkt->chunk_size, SRS_CONSTS_RTMP_MIN_CHUNK_SIZE, 
-                                                    SRS_CONSTS_RTMP_MAX_CHUNK_SIZE);
-                                        }
+            // for some server, the actual chunk size can greater than the max value(65536),
+            // so we just warning the invalid chunk size, and actually use it is ok,
+            // @see: https://github.com/winlinvip/simple-rtmp-server/issues/160
+            if (pkt->chunk_size < SRS_CONSTS_RTMP_MIN_CHUNK_SIZE
+            || pkt->chunk_size > SRS_CONSTS_RTMP_MAX_CHUNK_SIZE)
+            {
+            srs_warn("accept chunk size %d, but should in [%d, %d], "
+            "@see: https://github.com/winlinvip/simple-rtmp-server/issues/160",
+            pkt->chunk_size, SRS_CONSTS_RTMP_MIN_CHUNK_SIZE,
+            SRS_CONSTS_RTMP_MAX_CHUNK_SIZE);
+            }
 
-                                        in_chunk_size = pkt->chunk_size;
+            in_chunk_size = pkt->chunk_size;
 
-                                        srs_trace("input chunk size to %d", pkt->chunk_size);
-                                        break;
-                                    }
-        case RTMP_MSG_UserControlMessage: {
-                                              SrsUserControlPacket* pkt = dynamic_cast<SrsUserControlPacket*>(packet);
-                                              srs_assert(pkt != NULL);
+            srs_trace("input chunk size to %d", pkt->chunk_size);
+            break;
+        }
+        case RTMP_MSG_UserControlMessage:
+        {
+            SrsUserControlPacket* pkt = dynamic_cast<SrsUserControlPacket*>(packet);
+            srs_assert(pkt != NULL);
 
-                                              if (pkt->event_type == SrcPCUCSetBufferLength) {
-                                                  srs_trace("ignored. set buffer length to %d", pkt->extra_data);
-                                              }
-                                              if (pkt->event_type == SrcPCUCPingRequest) {
-                                                  if ((ret = response_ping_message(pkt->event_data)) != ERROR_SUCCESS) {
-                                                      return ret;
-                                                  }
-                                              }
-                                              break;
-                                          }
+            if (pkt->event_type == SrcPCUCSetBufferLength) {
+                srs_trace("ignored. set buffer length to %d", pkt->extra_data);
+            }
+            if (pkt->event_type == SrcPCUCPingRequest) {
+                if ((ret = response_ping_message(pkt->event_data)) != ERROR_SUCCESS) {
+                  return ret;
+                }
+            }
+            break;
+        }
         default:
-                                          break;
+            break;
     }
 
     return ret;
@@ -1554,42 +1557,44 @@ int SrsProtocol::on_send_packet(SrsMessage* msg, SrsPacket* packet)
     srs_assert(packet);
 
     switch (msg->header.message_type) {
-        case RTMP_MSG_SetChunkSize: {
-                                        SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
-                                        srs_assert(pkt != NULL);
+        case RTMP_MSG_SetChunkSize:
+        {
+            SrsSetChunkSizePacket* pkt = dynamic_cast<SrsSetChunkSizePacket*>(packet);
+            srs_assert(pkt != NULL);
 
-                                        out_chunk_size = pkt->chunk_size;
+            out_chunk_size = pkt->chunk_size;
 
-                                        srs_trace("out chunk size to %d", pkt->chunk_size);
-                                        break;
-                                    }
+            srs_trace("out chunk size to %d", pkt->chunk_size);
+            break;
+        }
         case RTMP_MSG_AMF0CommandMessage:
-        case RTMP_MSG_AMF3CommandMessage: {
-                                              if (true) {
-                                                  SrsConnectAppPacket* pkt = dynamic_cast<SrsConnectAppPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              if (true) {
-                                                  SrsCreateStreamPacket* pkt = dynamic_cast<SrsCreateStreamPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              if (true) {
-                                                  SrsFMLEStartPacket* pkt = dynamic_cast<SrsFMLEStartPacket*>(packet);
-                                                  if (pkt) {
-                                                      requests[pkt->transaction_id] = pkt->command_name;
-                                                      break;
-                                                  }
-                                              }
-                                              break;
-                                          }
+        case RTMP_MSG_AMF3CommandMessage:
+        {
+            if (true) {
+                SrsConnectAppPacket* pkt = dynamic_cast<SrsConnectAppPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            if (true) {
+                SrsCreateStreamPacket* pkt = dynamic_cast<SrsCreateStreamPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            if (true) {
+                SrsFMLEStartPacket* pkt = dynamic_cast<SrsFMLEStartPacket*>(packet);
+                if (pkt) {
+                    requests[pkt->transaction_id] = pkt->command_name;
+                    break;
+                }
+            }
+            break;
+        }
         default:
-                                          break;
+            break;
     }
 
     return ret;
@@ -4118,5 +4123,8 @@ int SrsUserControlPacket::encode_packet(SrsStream* stream)
 
     return ret;
 }
-
-
+/*
+SrsPingRequestPacket::SrsPingRequestPacket(int timestamp=0) {
+    event_data = (int32_t)timestamp;
+}
+*/

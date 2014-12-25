@@ -1038,8 +1038,8 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
            }
            */
 
-        // process UnPublish or pausePublish event.
         if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
+            // process UnPublish or pausePublish event.
             SrsPacket* pkt = NULL;
             if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
                 srs_error("flash decode unpublish message failed. ret=%d", ret);
