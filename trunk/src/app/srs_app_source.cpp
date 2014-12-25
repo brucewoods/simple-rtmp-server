@@ -1092,13 +1092,30 @@ int SrsSource::on_audio(SrsMessage* __audio)
 
 #ifdef SRS_AUTO_HLS
     if ((ret = hls->on_audio(msg.copy())) != ERROR_SUCCESS) {
-        srs_warn("hls process audio message failed, ignore and disable hls. ret=%d", ret);
-
-        // unpublish, ignore ret.
-        hls->on_unpublish();
-
-        // ignore.
-        ret = ERROR_SUCCESS;
+        // apply the error strategy for hls.
+        // @see https://github.com/winlinvip/simple-rtmp-server/issues/264
+        std::string hls_error_strategy = _srs_config->get_hls_on_error(_req->vhost);
+        if (hls_error_strategy == SRS_CONF_DEFAULT_HLS_ON_ERROR_IGNORE) {
+            srs_warn("hls process audio message failed, ignore and disable hls. ret=%d", ret);
+            
+            // unpublish, ignore ret.
+            hls->on_unpublish();
+            
+            // ignore.
+            ret = ERROR_SUCCESS;
+        } else if (hls_error_strategy == SRS_CONF_DEFAULT_HLS_ON_ERROR_CONTINUE) {
+            // compare the sequence header with audio, continue when it's actually an sequence header.
+            if (ret == ERROR_HLS_DECODE_ERROR && cache_sh_audio && cache_sh_audio->size == msg.size) {
+                srs_warn("the audio is actually a sequence header, ignore this packet.");
+                ret = ERROR_SUCCESS;
+            } else {
+                srs_warn("hls continue audio failed. ret=%d", ret);
+                return ret;
+            }
+        } else {
+            srs_warn("hls disconnect publisher for audio error. ret=%d", ret);
+            return ret;
+        }
     }
 #endif
 
@@ -1149,7 +1166,7 @@ int SrsSource::on_audio(SrsMessage* __audio)
         SrsAvcAacCodec codec;
         SrsCodecSample sample;
         if ((ret = codec.audio_aac_demux(msg.payload, msg.size, &sample)) != ERROR_SUCCESS) {
-            srs_error("codec demux audio failed. ret=%d", ret);
+            srs_error("source codec demux audio failed. ret=%d", ret);
             return ret;
         }
 
@@ -1201,13 +1218,30 @@ int SrsSource::on_video(SrsMessage* __video)
 
 #ifdef SRS_AUTO_HLS
     if ((ret = hls->on_video(msg.copy())) != ERROR_SUCCESS) {
-        srs_warn("hls process video message failed, ignore and disable hls. ret=%d", ret);
-
-        // unpublish, ignore ret.
-        hls->on_unpublish();
-
-        // ignore.
-        ret = ERROR_SUCCESS;
+        // apply the error strategy for hls.
+        // @see https://github.com/winlinvip/simple-rtmp-server/issues/264
+        std::string hls_error_strategy = _srs_config->get_hls_on_error(_req->vhost);
+        if (hls_error_strategy == SRS_CONF_DEFAULT_HLS_ON_ERROR_IGNORE) {
+            srs_warn("hls process video message failed, ignore and disable hls. ret=%d", ret);
+            
+            // unpublish, ignore ret.
+            hls->on_unpublish();
+            
+            // ignore.
+            ret = ERROR_SUCCESS;
+        } else if (hls_error_strategy == SRS_CONF_DEFAULT_HLS_ON_ERROR_CONTINUE) {
+            // compare the sequence header with video, continue when it's actually an sequence header.
+            if (ret == ERROR_HLS_DECODE_ERROR && cache_sh_video && cache_sh_video->size == msg.size) {
+                srs_warn("the video is actually a sequence header, ignore this packet.");
+                ret = ERROR_SUCCESS;
+            } else {
+                srs_warn("hls continue video failed. ret=%d", ret);
+                return ret;
+            }
+        } else {
+            srs_warn("hls disconnect publisher for video error. ret=%d", ret);
+            return ret;
+        }
     }
 #endif
 
@@ -1258,7 +1292,7 @@ int SrsSource::on_video(SrsMessage* __video)
         SrsAvcAacCodec codec;
         SrsCodecSample sample;
         if ((ret = codec.video_avc_demux(msg.payload, msg.size, &sample)) != ERROR_SUCCESS) {
-            srs_error("codec demux video failed. ret=%d", ret);
+            srs_error("source codec demux video failed. ret=%d", ret);
             return ret;
         }
 
