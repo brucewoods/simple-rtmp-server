@@ -1591,6 +1591,9 @@ enum SrcPCUCEventType
  * +------------------------------+-------------------------
  * Figure 5 Pay load for the ‘User Control Message’.
  */
+class SrsPingRequestPacket;
+class SrsPingResponsePacket;
+
 class SrsUserControlPacket : public SrsPacket
 {
     public:
