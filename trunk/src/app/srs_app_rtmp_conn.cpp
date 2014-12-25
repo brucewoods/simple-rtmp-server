@@ -99,7 +99,7 @@ extern SrsServer* _srs_server;
     hb_timer = NULL;
     kbps = new SrsKbps();
     kbps->set_io(skt, skt);
-    ping = new SrsPing(rtmp);
+    ping = NULL;
 
     _srs_config->subscribe(this);
 }
@@ -961,11 +961,19 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
         // TODO: write log
     }
 
+    ping = new SrsPing(rtmp);
+    if (ping->start() != ERROR_SUCCESS) {
+        // TODO: write log
+    }
+
     srs_info("flash start to publish stream %s success", req->stream.c_str());
     ret = do_flash_publishing(source);
 
     //end the heartbeat thread
     srs_freep(hb_timer);
+
+    //end the ping request sender
+    srs_freep(ping);
 
     // when edge, notice edge to change state.
     // when origin, notice all service to unpublish.
