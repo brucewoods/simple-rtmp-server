@@ -443,22 +443,22 @@ int SrsRtmpConn::get_client_info(int type)
 
 void SrsRtmpConn::stream_bytes_stat()
 {
-	if (is_edge)
-	{
-		return;
-	}
+    if (is_edge)
+    {
+        return;
+    }
     kbps->sample();
     int64_t send_bytes = get_send_bytes_delta();
     int64_t recv_bytes = get_recv_bytes_delta();
-	bool if_normal = 0;
-	if (req->client_info->user_role == E_Player && send_bytes >= MIN_STREAM_BYTES)
-	{
-		if_normal = 1;
-	}
-	else if (req->client_info->user_role == E_Publisher && recv_bytes >= MIN_STREAM_BYTES)
-	{
-		if_normal = 1;
-	}	
+    bool if_normal = 0;
+    if (req->client_info->user_role == E_Player && send_bytes >= MIN_STREAM_BYTES)
+    {
+        if_normal = 1;
+    }
+    else if (req->client_info->user_role == E_Publisher && recv_bytes >= MIN_STREAM_BYTES)
+    {
+        if_normal = 1;
+    }
     _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_STREAM_STABILITY, req ,"if_normal=%d send_bytes=%lld recv_bytes=%lld", \
             if_normal, send_bytes, recv_bytes);
 }
