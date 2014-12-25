@@ -1427,9 +1427,10 @@ int SrsRtmpConn::http_hooks_on_publish()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish->args.size(); i++) {
             std::string url = on_publish->args.at(i);
-            if ((ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req)) != ERROR_SUCCESS) {
+            ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish url=%s errno=%d", url.c_str(), ret);
+            if (ret != ERROR_SUCCESS) {
                 srs_error("hook client on_publish failed. url=%s, ret=%d", url.c_str(), ret);
-                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish url=%s errno=%d", url.c_str(), ret);
                 return ret;
             }
         }

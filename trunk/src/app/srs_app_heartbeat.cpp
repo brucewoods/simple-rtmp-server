@@ -38,6 +38,7 @@ using namespace std;
 #include <srs_app_config.hpp>
 #include <srs_protocol_rtmp.hpp>
 #include <srs_app_tb_http_hooks.hpp>
+#include <srs_app_tb_log.hpp>
 
 // conn heartbeat to im srv interval
 #define SRS_CONN_HEARTBEAT_INTERVAL_US (int64_t)(9500*1000LL)
@@ -127,7 +128,8 @@ int SrsConnHeartbeat::cycle() {
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_heartbeat->args.size(); i++) {
             std::string url = on_heartbeat->args.at(i);
-            SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
+            ret = SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=heartbeat url=%s errno=%d", url.c_str(), ret);
         }
     }
 
