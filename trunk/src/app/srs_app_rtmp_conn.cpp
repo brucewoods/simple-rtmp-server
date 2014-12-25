@@ -1082,6 +1082,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
 
             if (dynamic_cast<SrsTbPausePublishPacket*>(pkt)) {
                 SrsTbPausePublishPacket* pause_publish = dynamic_cast<SrsTbPausePublishPacket*>(pkt);
+                srs_trace("pause publish.");
                 tb_debug("pause_publish msgtype = %d", pause_publish->get_message_type());
                 if (stat_timer != NULL)
                 {
@@ -1093,6 +1094,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 continue;
             } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
                 SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
+                srs_trace("resume publish.");
                 tb_debug("pause_publish msgtype = %d", resume_publish->get_message_type());
                 if (stat_timer != NULL)
                 {
