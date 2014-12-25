@@ -828,8 +828,25 @@ int SrsProtocol::do_decode_message(SrsMessageHeader& header, SrsStream* stream, 
         return ret;
     } else if(header.is_user_control_message()) {
         srs_verbose("start to decode user control message.");
-        *ppacket = packet = new SrsUserControlPacket();
-        return packet->decode(stream);
+        //*ppacket = packet = new SrsUserControlPacket();
+        SrsUserControlPacket* ucpkt = new SrsUserControlPacket();
+        if ((ret = ucpkt->decode(stream)) != ERROR_SUCCESS) {
+            return ret;
+        }
+        switch (ucpkt->event_type) {
+        case SrcPCUCPingRequest:
+            *ppacket = ucpkt->to_ping_request();
+            srs_freep(ucpkt);
+            break;
+        case SrcPCUCPingResponse:
+            *ppacket = ucpkt->to_ping_response();
+            srs_freep(ucpkt);
+            break;
+        default:
+            *ppacket = ucpkt;
+            break;
+        }
+        return ret;
     } else if(header.is_window_ackledgement_size()) {
         srs_verbose("start to decode set ack window size message.");
         *ppacket = packet = new SrsSetWindowAckSizePacket();
@@ -4124,13 +4141,38 @@ int SrsUserControlPacket::encode_packet(SrsStream* stream)
     return ret;
 }
 
+SrsPingRequestPacket* SrsUserControlPacket::to_ping_request() {
+    SrsPingRequestPacket* pkt = new SrsPingRequestPacket((int)event_data);
+    return pkt;
+}
+
+SrsPingResponsePacket* SrsUserControlPacket::to_ping_response() {
+    SrsPingResponsePacket* pkt = new SrsPingResponsePacket((int)event_data);
+    return pkt;
+}
+
 SrsPingRequestPacket::SrsPingRequestPacket(int timestamp=0) {
     event_type = SrcPCUCPingRequest;
     event_data = (int32_t)timestamp;
-    event_data = (int32_t)0;
 }
 
 SrsPingRequestPacket::~SrsPingRequestPacket() {
 
 }
 
+int SrsPingRequestPacket::get_timestamp() {
+    return (int)event_data;
+}
+
+SrsPingResponsePacket::SrsPingResponsePacket(int timestamp=0) {
+    event_type = SrcPCUCPingResponse;
+    event_data = (int32_t)timestamp;
+}
+
+SrsPingResponsePacket::~SrsPingResponsePacket() {
+
+}
+
+int SrsPingResponsePacket::get_timestamp() {
+    return (int)event_data;
+}

@@ -26,7 +26,7 @@
 
 SrsPing::SrsPing(SrsRtmpServer* _rtmp) {
     rtmp = _rtmp;
-    last_req_time = last_res_time = 0;
+    last_request_time = last_response_time = 0;
     pthread = new SrsThread(this, SRS_PING_INTERVAL*1000*1000LL, true);
 }
 
@@ -34,12 +34,12 @@ SrsPing::~SrsPing() {
     srs_freep(pthread);
 }
 
-void SrsPing::set_last_res_time(int timestamp) {
-    last_res_time = timestamp;
+void SrsPing::set_last_response_time(int timestamp) {
+    last_response_time = timestamp;
 }
 
 int SrsPing::get_res_delay() {
-    return (last_req_time - last_res_time) / SRS_PING_INTERVAL;
+    return (last_request_time - last_response_time) / SRS_PING_INTERVAL;
 }
 
 int SrsPing::start() {
@@ -61,6 +61,9 @@ int SrsPing::cycle() {
         return ret;
     }
 
-    last_req_time = (int)timer;
+    last_request_time = (int)timer;
+
+    srs_trace("send ping request success, last_request_time=%d", last_request_time);
+
     return ret;
 }

@@ -1617,20 +1617,27 @@ class SrsUserControlPacket : public SrsPacket
     protected:
         virtual int get_size();
         virtual int encode_packet(SrsStream* stream);
+public:
+    SrsPingRequestPacket* to_ping_request();
+    SrsPingResponsePacket* to_ping_response();
 };
 
 class SrsPingRequestPacket : public SrsUserControlPacket {
 public:
-    SrsPingRequestPacket(int timestamp);
+    SrsPingRequestPacket(int timestamp = 0);
     virtual ~SrsPingRequestPacket();
+public:
+    int get_timestamp();
 };
 
-/*
+
 class SrsPingResponsePacket : public SrsUserControlPacket {
 public:
-    SrsPingResponsePacket(int timestamp);
+    SrsPingResponsePacket(int timestamp = 0);
     virtual ~SrsPingResponsePacket();
+public:
+    int get_timestamp();
 };
-*/
+
 #endif
 

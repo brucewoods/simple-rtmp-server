@@ -39,14 +39,14 @@ public:
     //i.e. if a pingrequest was sent
 private:
     SrsThread* pthread;
-    int last_req_time;
-    int last_res_time;
+    int last_request_time;
+    int last_response_time;
     SrsRtmpServer* rtmp;
 public:
     SrsPing(SrsRtmpServer* _rtmp);
     virtual ~SrsPing();
 public:
-    void set_last_res_time(int timestamp);
+    void set_last_response_time(int timestamp);
     /*
     if a negative value returned, the client is considered encounting problems,
     the app may close the connection

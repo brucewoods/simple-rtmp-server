@@ -1049,13 +1049,32 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
            }
            */
 
+        if (msg->header.is_user_control_message()) {
+            SrsPacket* pkt = NULL;
+            if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
+                srs_error("flash decode ping response failed. ret=%d", ret);
+                // TODO: write log
+                break;
+            }
 
-        if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
+            SrsAutoFree(SrsPacket, pkt);
+
+            if (dynamic_cast<SrsPingResponsePacket*>(pkt)) {
+                SrsPingResponsePacket* ping_response = dynamic_cast<SrsPingResponsePacket*>(pkt);
+
+                int timestamp = ping_response->get_timestamp();
+                ping->set_last_response_time(timestamp);
+
+                srs_trace("get ping response success, last response time=%d", timestamp);
+                continue;
+            }
+
+        } else if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
             // process UnPublish or pausePublish event.
             SrsPacket* pkt = NULL;
             if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
-                srs_error("flash decode unpublish message failed. ret=%d", ret);
-                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=decode_unpublish_failed", __FILE__, __LINE__, ret);
+                srs_error("flash decode pause/resume/unpublish message failed. ret=%d", ret);
+                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=decode_pause/resume/unpublish_failed", __FILE__, __LINE__, ret);
                 break;
             }
 
