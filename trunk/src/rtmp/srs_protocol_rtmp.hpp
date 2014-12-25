@@ -452,6 +452,10 @@ class SrsRtmpServer
          */
         virtual void response_connect_reject(SrsRequest* req, const char* desc);
         /**
+         * send the ping request to client.
+         */
+        virtual int send_ping_request(int timestamp);
+        /**
          * response client the onBWDone message.
          */
         virtual int on_bw_done();

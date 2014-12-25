@@ -1002,6 +1002,20 @@ void SrsRtmpServer::response_connect_reject(SrsRequest* /*req*/, const char* des
     return;
 }
 
+int SrsRtmpServer::send_ping_request(int timestamp) {
+    int ret = ERROR_SUCCESS;
+
+    SrsPingRequestPacket* pkt = new SrsPingRequestPacket(timestamp);
+
+    if ((ret = send_and_free_packet(pkt, 0)) != ERROR_SUCCESS) {
+        srs_error("send ping response failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("send ping response success.");
+
+    return ret;
+}
+
 int SrsRtmpServer::on_bw_done()
 {
     int ret = ERROR_SUCCESS;

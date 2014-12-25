@@ -1038,6 +1038,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
            }
            */
 
+
         if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
             // process UnPublish or pausePublish event.
             SrsPacket* pkt = NULL;

@@ -35,7 +35,6 @@
 #include <srs_app_reload.hpp>
 
 #include <string>
-using namespace std;
 
 const int64_t MIN_STREAM_BYTES = 1000;
 
@@ -76,6 +75,7 @@ class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandl
     SrsKbps* kbps;
     SrsTimer* stat_timer;
     SrsConnHeartbeat* hb_timer;
+    SrsPing* ping;
 public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
