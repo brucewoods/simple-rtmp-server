@@ -1618,7 +1618,7 @@ class SrsUserControlPacket : public SrsPacket
         virtual int get_size();
         virtual int encode_packet(SrsStream* stream);
 };
-
+/*
 class SrsPingRequestPacket : public SrsUserControlPacket {
 public:
     SrsPingRequestPacket(int timestamp);
@@ -1634,6 +1634,6 @@ public:
 protected:
     virtual int encode_packet(SrsStream* stream);
 };
-
+*/
 #endif
 
