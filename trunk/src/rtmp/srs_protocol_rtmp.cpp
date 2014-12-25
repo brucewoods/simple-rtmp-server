@@ -76,7 +76,7 @@ using namespace std;
 SrsClientInfo::SrsClientInfo()
 {
     client_type = E_CUnknown;
-    client_version = "0.0.0";
+    client_version = DEFAULT_VERSION;
     publish_token = "";
     user_role = E_RUnknown;
     net_type = E_NUnknown;

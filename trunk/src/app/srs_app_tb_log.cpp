@@ -286,6 +286,10 @@ void SrsTbLog::global_log(int log_level,const char * fmt,...)
         << "logid=" << SrsIdAlloc::generate_log_id() << " "
         << TB_LOG_COMMON_ITEM << " "
         << "log_type=" << LOGTYPE_GLOBAL_STAT << " "
+        << "client_type=" << E_CUnknown << " "
+        << "client_version=" << DEFAULT_VERSION << " " 
+        << "user_role=" << E_RUnknown << " "
+        << "net_type=" << E_NUnknown << " "
         << str_msg
         << "]";
     string log_body = ss.str();

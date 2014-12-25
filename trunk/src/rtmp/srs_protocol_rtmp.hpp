@@ -74,6 +74,8 @@ enum e_net_type
     E_FourG = 4,
 };
 
+const std::string DEFAULT_VERSION = "0.0.0"; 
+
 class SrsClientInfo
 {
     public:
