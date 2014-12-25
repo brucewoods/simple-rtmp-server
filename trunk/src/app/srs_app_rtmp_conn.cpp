@@ -54,6 +54,7 @@ using namespace std;
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
 #include <srs_app_heartbeat.hpp>
+#include <srs_app_ping.hpp>
 
 // when stream is busy, for example, streaming is already
 // publishing, when a new client to request to publish,
@@ -98,6 +99,7 @@ extern SrsServer* _srs_server;
     hb_timer = NULL;
     kbps = new SrsKbps();
     kbps->set_io(skt, skt);
+    ping = new SrsPing(rtmp);
 
     _srs_config->subscribe(this);
 }
@@ -114,6 +116,7 @@ SrsRtmpConn::~SrsRtmpConn()
     srs_freep(bandwidth);
     srs_freep(kbps);
     srs_freep(hb_timer);
+    srs_freep(ping);
 }
 
 void SrsRtmpConn::kbps_resample()
