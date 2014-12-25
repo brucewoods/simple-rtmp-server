@@ -75,11 +75,11 @@ using namespace std;
 
 SrsClientInfo::SrsClientInfo()
 {
-    client_type = E_Android;
-    client_version = "";
+    client_type = E_CUnknown;
+    client_version = "0.0.0";
     publish_token = "";
-    user_role = E_Player;
-    net_type = E_Wifi;
+    user_role = E_RUnknown;
+    net_type = E_NUnknown;
     conn_id = user_id = group_id = 0;
 }
 

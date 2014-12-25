@@ -390,7 +390,7 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
             ::write(wf_fd, str_log, size);
         }
     }
-	memset(log_data, 0, TB_LOG_MAX_SIZE);
+    memset(log_data, 0, TB_LOG_MAX_SIZE);
 }
 
 void SrsTbLog::open_log_file()

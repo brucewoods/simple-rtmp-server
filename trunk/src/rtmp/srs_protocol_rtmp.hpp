@@ -50,6 +50,7 @@ class SrsAmf0Object;
 //tb user info
 enum e_client_type
 {
+    E_CUnknown = 0,
     E_Ios = 1,
     E_Android = 2,
     E_Pc = 3,
@@ -57,6 +58,7 @@ enum e_client_type
 
 enum e_user_role
 {
+    E_RUnknown = 0,
     E_Publisher = 1,
     E_Player = 2,
     E_PublisherAI = 3,
@@ -65,7 +67,7 @@ enum e_user_role
 
 enum e_net_type
 {
-    E_Unknown = 0,
+    E_NUnknown = 0,
     E_Wifi = 1,
     E_TwoG = 2,
     E_ThreeG = 3,
