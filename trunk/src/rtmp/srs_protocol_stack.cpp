@@ -4151,7 +4151,7 @@ SrsPingResponsePacket* SrsUserControlPacket::to_ping_response() {
     return pkt;
 }
 
-SrsPingRequestPacket::SrsPingRequestPacket(int timestamp=0) {
+SrsPingRequestPacket::SrsPingRequestPacket(int timestamp) {
     event_type = SrcPCUCPingRequest;
     event_data = (int32_t)timestamp;
 }
@@ -4164,7 +4164,7 @@ int SrsPingRequestPacket::get_timestamp() {
     return (int)event_data;
 }
 
-SrsPingResponsePacket::SrsPingResponsePacket(int timestamp=0) {
+SrsPingResponsePacket::SrsPingResponsePacket(int timestamp) {
     event_type = SrcPCUCPingResponse;
     event_data = (int32_t)timestamp;
 }
