@@ -109,7 +109,7 @@ int SrsTbHttpHooks::get_res_data(const string &res, int& error, SrsJsonObject*& 
 
     SrsJsonAny* _data = http_res->get_property("data");
     if (!_data || !_data->is_object()) { //there must be data fields
-        return ERROR_HTTP_DATA_INVLIAD;
+        data = NULL;
     } else {
         data = _data->to_object();
     }
@@ -171,6 +171,13 @@ int SrsTbHttpHooks::on_connect(string url, int client_id, string ip, SrsRequest*
                     client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
             _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect url=%s file=%s line=%d errno=%d errmsg=get_res_data_failed", url.c_str(), __FILE__, __LINE__, ERROR_HTTP_ERROR_RETURNED);
             throw ERROR_HTTP_ERROR_RETURNED;
+        }
+        if (data == NULL) {
+            srs_error("http post on_connect parse result failed. "
+                    "client_id=%d, url=%s, request=%s, response=%s, ret=%d",
+                    client_id, url.c_str(), postdata.c_str(), res.c_str(), ret);
+            _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_HOOK, req, "action=connect url=%s file=%s line=%d errno=%d errmsg=parse_result_failed", url.c_str(), __FILE__, __LINE__, ERROR_HTTP_DATA_INVLIAD);
+            throw ERROR_HTTP_DATA_INVLIAD;
         }
         SrsJsonAny *accept = NULL;
         if (error != 0 || !(accept = data->get_property("accept")) || !accept->is_integer()) {
