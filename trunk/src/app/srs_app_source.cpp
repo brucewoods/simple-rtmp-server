@@ -758,11 +758,14 @@ int SrsSource::on_reload_vhost_forward(string vhost)
         return ret;
     }
 
-    // forwarders
-    destroy_forwarders();
-    if ((ret = create_forwarders()) != ERROR_SUCCESS) {
-        srs_error("create forwarders failed. ret=%d", ret);
-        return ret;
+    if (SRS_FORWARD_STRATEGY_RECURSIVE ||
+        ((_req->client_info != NULL) && (_req->client_info->user_role != E_Forward))) {
+        // forwarders
+        destroy_forwarders();
+        if ((ret = create_forwarders()) != ERROR_SUCCESS) {
+            srs_error("create forwarders failed. ret=%d", ret);
+            return ret;
+        }
     }
 
     srs_trace("vhost %s forwarders reload success", vhost.c_str());
@@ -1457,9 +1460,12 @@ int SrsSource::on_publish()
     on_source_id_changed(_srs_context->get_id());
 
     // create forwarders
-    if ((ret = create_forwarders()) != ERROR_SUCCESS) {
-        srs_error("create forwarders failed. ret=%d", ret);
-        return ret;
+    if (SRS_FORWARD_STRATEGY_RECURSIVE ||
+        ((_req->client_info != NULL) && (_req->client_info->user_role != E_Forward))) {
+        if ((ret = create_forwarders()) != ERROR_SUCCESS) {
+            srs_error("create forwarders failed. ret=%d", ret);
+            return ret;
+        }
     }
 
     // TODO: FIXME: use initialize to set req.
