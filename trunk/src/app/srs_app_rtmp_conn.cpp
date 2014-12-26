@@ -955,25 +955,30 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
         return ret;
     }
 
-    //start the heartbeat thread
-    hb_timer = new SrsConnHeartbeat(req, ip);
-    if (hb_timer->start() != ERROR_SUCCESS) {
-        // TODO: write log
-    }
+    if (req->client_info->user_role != E_Forward) {
+        //start the heartbeat thread
+        hb_timer = new SrsConnHeartbeat(req, ip);
+        if (hb_timer->start() != ERROR_SUCCESS) {
+            // TODO: write log
+        }
 
-    ping = new SrsPing(rtmp);
-    if (ping->start() != ERROR_SUCCESS) {
-        // TODO: write log
+        //start the ping request sender to client
+        ping = new SrsPing(rtmp);
+        if (ping->start() != ERROR_SUCCESS) {
+            // TODO: write log
+        }
     }
 
     srs_info("flash start to publish stream %s success", req->stream.c_str());
     ret = do_flash_publishing(source);
 
-    //end the heartbeat thread
-    srs_freep(hb_timer);
+    if (req->client_info->user_role != E_Forward) {
+        //end the heartbeat thread
+        srs_freep(hb_timer);
 
-    //end the ping request sender
-    srs_freep(ping);
+        //end the ping request sender to client
+        srs_freep(ping);
+    }
 
     // when edge, notice edge to change state.
     // when origin, notice all service to unpublish.
