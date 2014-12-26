@@ -50,7 +50,7 @@ const std::string TB_LOG_FILE = "log/rtmpsrv.log";
 const std::string TB_WF_LOG_FILE = "log/rtmpsrv.log.wf";
 
 
-const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=srs";
+const std::string TB_LOG_COMMON_ITEM = "product=tieba subsys=live module=rtmpsrv";
 const std::string LOGTYPE_HOOK = "callback";
 const std::string LOGTYPE_CREATE_STREAM = "create_stream";
 const std::string LOGTYPE_STREAM_STABILITY = "stream_stability";
