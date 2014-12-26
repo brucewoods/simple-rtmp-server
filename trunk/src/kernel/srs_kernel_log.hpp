@@ -50,10 +50,10 @@ public:
     static const int Verbose = 0x01;
     static const int Info = 0x02;
     static const int Trace = 0x03;
-	static const int Notice = 0x03;
+    static const int Notice = 0x03;
     static const int Warn = 0x04;
     static const int Error = 0x05;
-	static const int Fatal = 0x05;
+    static const int Fatal = 0x05;
     // specified the disabled level, no log, for utest.
     static const int Disabled = 0x06;
 };
@@ -85,7 +85,7 @@ public:
     /**
     * log for trace, important information.
     */
-	virtual void trace(const char* tag, int context_id, const char* fmt, ...);
+    virtual void trace(const char* tag, int context_id, const char* fmt, ...);
     /**
     * log for warn, warn is something should take attention, but not a error.
     */
@@ -111,11 +111,11 @@ public:
 class TbLogLevel
 {
 public:
-	static const int Debug = 0x01;
-	static const int Notice = 0x02;
-	static const int Warn = 0x03;
-	static const int Error = 0x04;
-	static const int Fatal = 0x05;
+    static const int Debug = 0x01;
+    static const int Notice = 0x02;
+    static const int Warn = 0x03;
+    static const int Error = 0x04;
+    static const int Fatal = 0x05;
 };
 
 class SrsRequest;
@@ -126,13 +126,13 @@ public:
     virtual ~ITbLog(){};
 public:
     virtual int initialize() = 0;
-	virtual void debug(const char* fmt, ...) = 0;
+    virtual void debug(const char* fmt, ...) = 0;
     virtual void notice(const char* fmt, ...) = 0;
     virtual void warn(const char* fmt, ...) = 0;
     virtual void error(const char* fmt, ...) = 0;
     virtual void fatal(const char* fmt, ...) = 0;
-	virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...) = 0;
-	virtual void global_log(int log_level, const char* fmt, ...) = 0;
+    virtual void conn_log(int log_level, std::string log_type, SrsRequest* req, const char* fmt, ...) = 0;
+    virtual void global_log(int log_level, const char* fmt, ...) = 0;
 };
 
 // user must provides a log object
@@ -142,11 +142,11 @@ extern ITbLog* _tb_log;
 // user must implements the LogContext and define a global instance.
 extern ISrsThreadContext* _srs_context;
 
-#define tb_debug(msg, ...)	_tb_log->debug(msg, ##__VA_ARGS__)
-#define tb_notice(msg, ...)	_tb_log->notice(msg, ##__VA_ARGS__)
-#define tb_warn(msg, ...)	_tb_log->warn(msg, ##__VA_ARGS__)
-#define tb_error(msg, ...)	_tb_log->error(msg, ##__VA_ARGS__)
-#define tb_fatal(msg, ...)	_tb_log->fatal(msg, ##__VA_ARGS__)
+#define tb_debug(msg, ...)    _tb_log->debug(msg, ##__VA_ARGS__)
+#define tb_notice(msg, ...)    _tb_log->notice(msg, ##__VA_ARGS__)
+#define tb_warn(msg, ...)    _tb_log->warn(msg, ##__VA_ARGS__)
+#define tb_error(msg, ...)    _tb_log->error(msg, ##__VA_ARGS__)
+#define tb_fatal(msg, ...)    _tb_log->fatal(msg, ##__VA_ARGS__)
 
 // donot print method
 #if 1

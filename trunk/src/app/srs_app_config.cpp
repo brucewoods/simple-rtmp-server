@@ -1367,7 +1367,7 @@ int SrsConfig::check_config()
                     string m = conf->at(j)->name.c_str();
                     if (m != "enabled" && m != "on_connect" && m != "on_close" && m != "on_publish"
                         && m != "on_unpublish" && m != "on_play" && m != "on_stop"
-                        && m != "on_publish_pause" && m != "on_publish_resume"
+                        && m != "on_publish_pause" && m != "on_publish_resume" && m != "on_heartbeat"
                     ) {
                         ret = ERROR_SYSTEM_CONFIG_INVALID;
                         srs_error("unsupported vhost http_hooks directive %s, ret=%d", m.c_str(), ret);
@@ -2155,7 +2155,7 @@ SrsConfDirective* SrsConfig::get_vhost_on_publish_pause(string vhost)
         return NULL;
     }
 
-    return conf->get("on_unpublish");
+    return conf->get("on_publish_pause");
 }
 
 SrsConfDirective* SrsConfig::get_vhost_on_publish_resume(string vhost)
@@ -2166,7 +2166,18 @@ SrsConfDirective* SrsConfig::get_vhost_on_publish_resume(string vhost)
         return NULL;
     }
 
-    return conf->get("on_unpublish");
+    return conf->get("on_publish_resume");
+}
+
+SrsConfDirective* SrsConfig::get_vhost_on_heartbeat(string vhost)
+{
+    SrsConfDirective* conf = get_vhost_http_hooks(vhost);
+
+    if (!conf) {
+        return NULL;
+    }
+
+    return conf->get("on_heartbeat");
 }
 
 SrsConfDirective* SrsConfig::get_vhost_on_play(string vhost)

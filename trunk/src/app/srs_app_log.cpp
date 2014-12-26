@@ -325,11 +325,11 @@ void SrsFastLog::write_log(int& fd, char *str_log, int size, int level)
     size = srs_min(LOG_MAX_SIZE - 1 - LOG_TAIL_SIZE, size);
     
     // add some to the end of char.
-    str_log[size++] = LOG_TAIL;
-    str_log[size++] = 0;
+    str_log[size++] = '\n';
     
     // if not to file, to console and return.
     if (!log_to_file_tank) {
+        str_log[size++] = 0;
         // if is error msg, then print color msg.
         // \033[31m : red text code in shell
         // \033[32m : green text code in shell

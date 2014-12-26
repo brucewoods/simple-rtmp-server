@@ -25,10 +25,10 @@
 #include <srs_app_source.hpp>
 #include <srs_app_tb_log.hpp>
 
-	SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn) 
+    SrsConnStatTimer::SrsConnStatTimer(int _interval, SrsRtmpConn* _rtmp_conn) 
 : SrsTimer(_interval)
 {
-	rtmp_conn = _rtmp_conn;
+    rtmp_conn = _rtmp_conn;
 }
 
 SrsConnStatTimer::~SrsConnStatTimer()
@@ -37,10 +37,10 @@ SrsConnStatTimer::~SrsConnStatTimer()
 
 void SrsConnStatTimer::callback()
 {
-	rtmp_conn->stream_bytes_stat();
+    rtmp_conn->stream_bytes_stat();
 }
 
-	SrsGlobalStatTimer::SrsGlobalStatTimer(int _interval)
+    SrsGlobalStatTimer::SrsGlobalStatTimer(int _interval)
 : SrsTimer(_interval)
 {
 }
@@ -51,7 +51,7 @@ SrsGlobalStatTimer::~SrsGlobalStatTimer()
 
 void SrsGlobalStatTimer::callback()
 {
-	SrsSource::global_stat();
+    SrsSource::global_stat();
 }
 
 

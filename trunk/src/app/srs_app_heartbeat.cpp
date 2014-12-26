@@ -24,8 +24,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <srs_app_heartbeat.hpp>
 #include <srs_kernel_error.hpp>
 
-#ifdef SRS_AUTO_HTTP_PARSER
-
 #include <string>
 #include <sstream>
 using namespace std;
@@ -40,6 +38,12 @@ using namespace std;
 #include <srs_app_config.hpp>
 #include <srs_protocol_rtmp.hpp>
 #include <srs_app_tb_http_hooks.hpp>
+#include <srs_app_tb_log.hpp>
+
+// conn heartbeat to im srv interval
+#define SRS_CONN_HEARTBEAT_INTERVAL_US (int64_t)(9500*1000LL)
+
+#ifdef SRS_AUTO_HTTP_PARSER
 
 SrsHttpHeartbeat::SrsHttpHeartbeat()
 {
@@ -49,12 +53,14 @@ SrsHttpHeartbeat::~SrsHttpHeartbeat()
 {
 }
 
+
+
 void SrsHttpHeartbeat::heartbeat()
 {
     int ret = ERROR_SUCCESS;
-    
+
     std::string url = _srs_config->get_heartbeat_url();
-    
+
     SrsHttpUri uri;
     if ((ret = uri.initialize(url)) != ERROR_SUCCESS) {
         srs_error("http uri parse hartbeart url failed. url=%s, ret=%d", url.c_str(), ret);
@@ -63,16 +69,16 @@ void SrsHttpHeartbeat::heartbeat()
 
     std::string ip = "";
     std::string device_id = _srs_config->get_heartbeat_device_id();
-    
+
     vector<string>& ips = srs_get_local_ipv4_ips();
     if (!ips.empty()) {
         ip = ips[_srs_config->get_stats_network() % (int)ips.size()];
     }
-    
+
     std::stringstream ss;
     ss << __SRS_JOBJECT_START
-        << __SRS_JFIELD_STR("device_id", device_id) << __SRS_JFIELD_CONT
-        << __SRS_JFIELD_STR("ip", ip);
+            << __SRS_JFIELD_STR("device_id", device_id) << __SRS_JFIELD_CONT
+            << __SRS_JFIELD_STR("ip", ip);
     if (_srs_config->get_heartbeat_summaries()) {
         ss << __SRS_JFIELD_CONT << __SRS_JFIELD_ORG("summaries", "");
         srs_api_dump_summaries(ss);
@@ -80,27 +86,30 @@ void SrsHttpHeartbeat::heartbeat()
     ss << __SRS_JOBJECT_END;
     std::string data = ss.str();
     std::string res;
-    
+
     SrsHttpClient http;
     if ((ret = http.post(&uri, data, res)) != ERROR_SUCCESS) {
         srs_info("http post hartbeart uri failed. "
-            "url=%s, request=%s, response=%s, ret=%d",
-            url.c_str(), data.c_str(), res.c_str(), ret);
+                "url=%s, request=%s, response=%s, ret=%d",
+                url.c_str(), data.c_str(), res.c_str(), ret);
         return;
     }
-    
+
     srs_info("http hook hartbeart success. "
-        "url=%s, request=%s, response=%s, ret=%d",
-        url.c_str(), data.c_str(), res.c_str(), ret);
-    
+            "url=%s, request=%s, response=%s, ret=%d",
+            url.c_str(), data.c_str(), res.c_str(), ret);
+
     return;
 }
 
-#endif
-
-SrsConnHeartbeat::SrsConnHeartbeat(int _interval, SrsRequest* _req, string _ip) : SrsTimer(_interval) {
+SrsConnHeartbeat::SrsConnHeartbeat(SrsRequest* _req, string _ip) {
     req = _req;
     ip = _ip;
+    pthread = new SrsThread(this, SRS_CONN_HEARTBEAT_INTERVAL_US, true);
+}
+
+SrsConnHeartbeat::~SrsConnHeartbeat() {
+    srs_freep(pthread);
 }
 
 int SrsConnHeartbeat::cycle() {
@@ -109,24 +118,27 @@ int SrsConnHeartbeat::cycle() {
     //post heartbeat to im serv
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
-        // HTTP: on_stop
-        SrsConfDirective* on_stop = _srs_config->get_vhost_on_stop(req->vhost);
-        if (!on_stop) {
-            srs_info("ignore the empty http callback: on_stop");
+        // HTTP: on_heartbeat
+        SrsConfDirective* on_heartbeat = _srs_config->get_vhost_on_heartbeat(req->vhost);
+        if (!on_heartbeat) {
+            srs_info("ignore the empty http callback: on_heartbeat");
             return ret;
         }
 
         int connection_id = _srs_context->get_id();
-        for (int i = 0; i < (int)on_stop->args.size(); i++) {
-            std::string url = on_stop->args.at(i);
-            SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
+        for (int i = 0; i < (int)on_heartbeat->args.size(); i++) {
+            std::string url = on_heartbeat->args.at(i);
+            ret = SrsTbHttpHooks::on_heartbeat(url, connection_id, ip, req);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=heartbeat url=%s errno=%d", url.c_str(), ret);
         }
     }
 
-    pthread->stop_loop();
     return ret;
 }
 
-void SrsConnHeartbeat::callback() {
-    pthread->start();
+int SrsConnHeartbeat::start() {
+    return pthread->start();
 }
+
+
+#endif

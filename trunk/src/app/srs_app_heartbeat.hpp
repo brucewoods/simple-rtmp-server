@@ -50,24 +50,26 @@ public:
     virtual void heartbeat();
 };
 
-#endif
 
 /**
 * the http heartbeat to notice im server
 * that a stream is still publishing
 */
-class SrsConnHeartbeat: public SrsTimer, public ISrsThreadHandler {
+class SrsConnHeartbeat: public ISrsThreadHandler {
 private:
     SrsThread* pthread;
     SrsRequest* req;
     std::string ip;
 public:
-    SrsConnHeartbeat(int _interval, SrsRequest* _req, std::string _ip);
+    SrsConnHeartbeat(SrsRequest* _req, std::string _ip);
+    ~SrsConnHeartbeat();
 public:
-    virtual void callback();
+    virtual int start();
 public:
     virtual int cycle();
 };
+
+#endif
 
 #endif
 

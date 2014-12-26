@@ -278,11 +278,11 @@ class SrsSource : public ISrsReloadHandler
 {
 private:
     static std::map<std::string, SrsSource*> pool;
-	static SrsGlobalStatTimer* stat_timer;
-	static bool if_init;
+    static SrsGlobalStatTimer* stat_timer;
+    static bool if_init;
 public:
-	static int static_init();
-	static void global_stat();
+    static int static_init();
+    static void global_stat();
     /**
     * find stream by vhost/app/stream.
     * @param req the client request.
