@@ -63,6 +63,7 @@ enum e_user_role
     E_Player = 2,
     E_PublisherAI = 3,
     E_Edge = 4,
+    E_Forward = 5;
 };
 
 enum e_net_type

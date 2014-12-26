@@ -1362,6 +1362,11 @@ int SrsRtmpConn::http_hooks_on_connect()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_connect 
         SrsConfDirective* on_connect = _srs_config->get_vhost_on_connect(req->vhost);
@@ -1388,6 +1393,10 @@ int SrsRtmpConn::http_hooks_on_connect()
 void SrsRtmpConn::http_hooks_on_close()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
     /*
        if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
     // whatever the ret code, notify the api hooks.
@@ -1411,6 +1420,11 @@ void SrsRtmpConn::http_hooks_on_close()
 void SrsRtmpConn::http_hooks_on_errorclose()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_close
@@ -1435,6 +1449,11 @@ int SrsRtmpConn::http_hooks_on_publish()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_publish 
         SrsConfDirective* on_publish = _srs_config->get_vhost_on_publish(req->vhost);
@@ -1462,6 +1481,11 @@ int SrsRtmpConn::http_hooks_on_publish()
 void SrsRtmpConn::http_hooks_on_unpublish()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish 
@@ -1484,6 +1508,11 @@ void SrsRtmpConn::http_hooks_on_unpublish()
 void SrsRtmpConn::http_hooks_on_publish_pause()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish
@@ -1506,6 +1535,11 @@ void SrsRtmpConn::http_hooks_on_publish_pause()
 void SrsRtmpConn::http_hooks_on_publish_resume()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish
@@ -1530,6 +1564,11 @@ int SrsRtmpConn::http_hooks_on_play()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_play 
         SrsConfDirective* on_play = _srs_config->get_vhost_on_play(req->vhost);
@@ -1556,6 +1595,11 @@ int SrsRtmpConn::http_hooks_on_play()
 void SrsRtmpConn::http_hooks_on_stop()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_stop 

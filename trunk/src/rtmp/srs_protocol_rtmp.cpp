@@ -894,7 +894,14 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
         srs_freep(req->args);
         req->args = pkt->args->copy()->to_object();
         srs_info("copy edge traverse to origin auth args.");
+        if ((prop = req->args->ensure_property_string("srs_role")) != NULL) {
+            string srs_role = prop->to_str();
+            if (srs_role == RTMP_SIG_SRS_ROLE_FWD) {
+                req->client_info->user_role = E_Forward;
+            }
+        }
     }
+
 
     srs_info("get connect app message params success.");
 
