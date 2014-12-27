@@ -77,18 +77,21 @@ enum e_net_type
 
 class SrsClientInfo
 {
-    public:
-        int client_type;
-        std::string client_version;
-        std::string publish_token;
-        int user_role;
-        int net_type;
-        int64_t conn_id;
-        int64_t user_id;
-        int64_t group_id;
-    public:
-        SrsClientInfo();
-        ~SrsClientInfo();
+public:
+    int client_type;
+    std::string client_version;
+    std::string publish_token;
+    int user_role;
+    int net_type;
+    int64_t conn_id;
+    int64_t user_id;
+    int64_t group_id;
+public:
+    SrsClientInfo();
+    ~SrsClientInfo();
+public:
+    //deep copy
+    SrsClientInfo* copy();
 };
 
 /**

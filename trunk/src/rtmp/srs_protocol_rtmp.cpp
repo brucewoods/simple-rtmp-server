@@ -87,6 +87,21 @@ SrsClientInfo::~SrsClientInfo()
 {
 }
 
+SrsClientInfo *SrsClientInfo::copy() {
+    SrsClientInfo* cp = new SrsClientInfo();
+
+    cp->client_type = client_type;
+    cp->client_version = client_version;
+    cp->publish_token = publish_token;
+    cp->user_role = user_role;
+    cp->net_type = net_type;
+    cp->conn_id = conn_id;
+    cp->user_id = user_id;
+    cp->group_id = group_id;
+
+    return cp;
+}
+
 SrsRequest::SrsRequest()
 {
     objectEncoding = RTMP_SIG_AMF0_VER;
@@ -131,7 +146,9 @@ SrsRequest* SrsRequest::copy()
     cp->tcUrl = tcUrl;
     cp->vhost = vhost;
     cp->duration = duration;
-    cp->client_info = client_info;
+    if (client_info) {
+        cp->client_info = client_info->copy();
+    }
     if (args) {
         cp->args = args->copy()->to_object();
     }
