@@ -480,6 +480,18 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
+    if (is_edge)
+    {
+        req->client_info->user_role = E_Edge;
+    }
+    else if (type == SrsRtmpConnPlay)
+    {
+        req->client_info->user_role = E_Player;
+    }
+    else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
+    {
+        req->client_info->user_role = E_Publisher;
+    }
     /*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
       {
       conn_log(TbLogLevel::Warn, "file=%s line=%d errno=%d errmsg=get_client_info_failed", __FILE__, __LINE__, ret);
@@ -1383,9 +1395,10 @@ int SrsRtmpConn::http_hooks_on_connect()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_connect->args.size(); i++) {
             std::string url = on_connect->args.at(i);
-            if ((ret = SrsTbHttpHooks::on_connect(url, connection_id, ip, req)) != ERROR_SUCCESS) {
-                srs_error("hook client on_connect failed. url=%s, ret=%d", url.c_str(), ret);
-                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=connect url=%s errno=%d", url.c_str(), ret);
+            ret = SrsTbHttpHooks::on_connect(url, connection_id, ip, req);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=connect url=%s errno=%d", url.c_str(), ret);
+            if (ret != ERROR_SUCCESS)
+            {    
                 return ret;
             }
         }
@@ -1471,9 +1484,10 @@ int SrsRtmpConn::http_hooks_on_publish()
         int connection_id = _srs_context->get_id();
         for (int i = 0; i < (int)on_publish->args.size(); i++) {
             std::string url = on_publish->args.at(i);
-            if ((ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req)) != ERROR_SUCCESS) {
+            ret = SrsTbHttpHooks::on_publish(url, connection_id, ip, req);
+            _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish url=%s errno=%d", url.c_str(), ret);
+            if (ret != ERROR_SUCCESS) {
                 srs_error("hook client on_publish failed. url=%s, ret=%d", url.c_str(), ret);
-                _tb_log->conn_log(TbLogLevel::Notice, LOGTYPE_HOOK, req, "action=publish url=%s errno=%d", url.c_str(), ret);
                 return ret;
             }
         }
