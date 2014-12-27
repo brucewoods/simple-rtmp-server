@@ -1647,7 +1647,10 @@ int SrsSource::create_forwarders()
                     "vhost=%s, app=%s, stream=%s, forward-to=%s",
                     _req->vhost.c_str(), _req->app.c_str(), _req->stream.c_str(),
                     forward_server.c_str());
-            return ret;
+            // TODO: FIXME a forwarder which may cause loop should never be added here
+            forwarders.pop_back();
+            srs_freep(forwarder);
+            //return ret;
         }
     }
 
