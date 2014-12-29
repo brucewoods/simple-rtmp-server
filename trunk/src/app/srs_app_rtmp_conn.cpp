@@ -94,7 +94,6 @@ extern SrsServer* _srs_server;
     refer = new SrsRefer();
     bandwidth = new SrsBandwidth();
     duration = 0;
-    is_edge = false;
     stat_timer = NULL;
     hb_timer = NULL;
     kbps = new SrsKbps();
@@ -284,7 +283,6 @@ int SrsRtmpConn::service_cycle()
     bool vhost_is_edge = _srs_config->get_vhost_is_edge(req->vhost);
     bool edge_traverse = _srs_config->get_vhost_edge_token_traverse(req->vhost);
     if (vhost_is_edge && edge_traverse) {
-        is_edge = true;
         if ((ret = check_edge_token_traverse_auth()) != ERROR_SUCCESS) {
             srs_warn("token auth failed, ret=%d", ret);
             _tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=toke_auth_failed", __FILE__, __LINE__, ret);
@@ -361,92 +359,9 @@ int SrsRtmpConn::service_cycle()
     }
 }
 
-int SrsRtmpConn::get_client_info(int type)
-{
-    int ret = ERROR_SUCCESS;
-    if (req->stream == "")
-    {
-        return ERROR_USER_ARGS;
-    }
-    string demi1 = "&";
-    string demi2 = "=";
-    string source_str = req->stream;
-    bool is_first = true;
-    string::size_type pos = 0;
-    while (1)
-    {
-        if ((pos = source_str.find(demi1, 0)) == string::npos)
-        {
-            if (is_first)
-            {
-                ret = ERROR_USER_ARGS;
-                break;
-            }
-            pos = source_str.find(demi2, 0);
-            if (pos == string::npos)
-            {
-                ret = ERROR_USER_ARGS;
-                break;
-            }
-            string key = source_str.substr(0, pos);
-            string value = source_str.substr(pos + 1);
-            if (key == "userId")
-            {
-                req->client_info->user_id = atoll(value.c_str());
-            }
-            else if (key == "groupId")
-            {
-                req->client_info->group_id = atoll(value.c_str());
-            }
-            break;
-        }
-        if (is_first)
-        {
-            source_str = source_str.substr(pos + 1);
-            is_first = false;
-            continue;
-        }
-        string item = source_str.substr(0, pos);
-        source_str = source_str.substr(pos + 1);
-        pos = item.find(demi2, 0);
-        if (pos == string::npos)
-        {
-            ret = ERROR_USER_ARGS;
-            break;
-        }
-        string key = item.substr(0, pos);
-        string value = item.substr(pos + 1);
-        if (key == "userId")
-        {
-            req->client_info->user_id = atoll(value.c_str());
-        }
-        else if (key == "groupId")
-        {
-            req->client_info->group_id = atoll(value.c_str());
-        }
-    }
-    if (ret == ERROR_SUCCESS)
-    {
-        if (is_edge)
-        {
-            req->client_info->user_role = E_Edge;
-        }
-        else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
-        {
-            req->client_info->user_role = E_Publisher;
-        }
-        else
-        {
-            req->client_info->user_role = E_Player;
-        }
-        req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
-    }
-    return ret;
-}
-
 void SrsRtmpConn::stream_bytes_stat()
 {
-    if (is_edge)
+    if (req->client_info->user_role != E_Player && req->client_info->user_role != E_Publisher)
     {
         return;
     }
@@ -480,17 +395,16 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
-    if (is_edge)
+    if (req->client_info->user_role != E_RUnknown)
     {
-        req->client_info->user_role = E_Edge;
-    }
-    else if (type == SrsRtmpConnPlay)
-    {
-        req->client_info->user_role = E_Player;
-    }
-    else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
-    {
-        req->client_info->user_role = E_Publisher;
+        if (type == SrsRtmpConnPlay)
+        {
+            req->client_info->user_role = E_Player;
+        }
+        else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
+        {
+            req->client_info->user_role = E_Publisher;
+        }
     }
     /*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
       {

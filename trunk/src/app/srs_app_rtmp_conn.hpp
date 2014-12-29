@@ -71,7 +71,6 @@ class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandl
     // for live play duration, for instance, rtmpdump to record.
     // @see https://github.com/winlinvip/simple-rtmp-server/issues/47
     int64_t duration;
-    bool is_edge;
     int timer_id;
     SrsKbps* kbps;
     SrsTimer* stat_timer;
@@ -96,8 +95,6 @@ public:
     virtual int64_t get_send_bytes_delta();
     virtual int64_t get_recv_bytes_delta();
 private:
-    //store client info
-    virtual int get_client_info(int type);
     // when valid and connected to vhost/app, service the client.
     virtual int service_cycle();
     // stream(play/publish) service cycle, identify client first.
