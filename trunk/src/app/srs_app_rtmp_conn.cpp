@@ -656,6 +656,13 @@ int SrsRtmpConn::playing(SrsSource* source)
     stat_timer = new SrsConnStatTimer(STAT_LOG_INTERVAL, this);
     _srs_server->timer_manager->regist_timer(stat_timer);
 
+
+    //create thread for ping request
+    ping = new SrsPing(rtmp);
+    if (ping->start() != ERROR_SUCCESS) {
+        // TODO: write log
+    }
+
     while (true) {
         // collect elapse for pithy print.
         pithy_print.elapse();
@@ -759,6 +766,7 @@ int SrsRtmpConn::playing(SrsSource* source)
         _srs_server->timer_manager->remove_timer(stat_timer);
     }
     srs_freep(stat_timer);
+    srs_freep(ping);
     return ret;
 }
 
