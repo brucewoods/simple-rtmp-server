@@ -398,12 +398,12 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     // to calendar time
     struct tm* tm;
     tm = localtime(&tv.tv_sec);
-    string cur_time;
-    snprintf(const_cast<char*>(cur_time.c_str()), TB_LOG_MAX_SIZE, 
+    char* cur_time;
+    snprintf(cur_time, TB_LOG_MAX_SIZE, 
             "%d%02d%02d%02d%02d", 
             1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
     strLogFile.append(".");
-    strLogFile.append(cur_time.c_str());
+    strLogFile.append(cur_time);
     if (cur_time != log_file_time)
     {
         if (fd > 0)
