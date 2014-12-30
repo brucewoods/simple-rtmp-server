@@ -44,6 +44,10 @@ class SrsRequest;
 class SrsSource;
 class SrsKbps;
 
+// if set true, srs will forward a stream
+// which is published by another forwarder to other host
+#define SRS_FORWARD_STRATEGY_RECURSIVE false
+
 /**
 * forward the stream to other servers.
 */

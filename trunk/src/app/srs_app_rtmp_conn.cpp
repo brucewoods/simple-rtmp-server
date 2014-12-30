@@ -54,6 +54,7 @@ using namespace std;
 #include <srs_protocol_msg_array.hpp>
 #include <srs_protocol_amf0.hpp>
 #include <srs_app_heartbeat.hpp>
+#include <srs_app_ping.hpp>
 
 // when stream is busy, for example, streaming is already
 // publishing, when a new client to request to publish,
@@ -93,11 +94,11 @@ extern SrsServer* _srs_server;
     refer = new SrsRefer();
     bandwidth = new SrsBandwidth();
     duration = 0;
-    is_edge = false;
     stat_timer = NULL;
     hb_timer = NULL;
     kbps = new SrsKbps();
     kbps->set_io(skt, skt);
+    ping = NULL;
 
     _srs_config->subscribe(this);
 }
@@ -114,6 +115,7 @@ SrsRtmpConn::~SrsRtmpConn()
     srs_freep(bandwidth);
     srs_freep(kbps);
     srs_freep(hb_timer);
+    srs_freep(ping);
 }
 
 void SrsRtmpConn::kbps_resample()
@@ -281,7 +283,6 @@ int SrsRtmpConn::service_cycle()
     bool vhost_is_edge = _srs_config->get_vhost_is_edge(req->vhost);
     bool edge_traverse = _srs_config->get_vhost_edge_token_traverse(req->vhost);
     if (vhost_is_edge && edge_traverse) {
-        is_edge = true;
         if ((ret = check_edge_token_traverse_auth()) != ERROR_SUCCESS) {
             srs_warn("token auth failed, ret=%d", ret);
             _tb_log->conn_log(TbLogLevel::Warn, LOGTYPE_CREATE_STREAM, req, "file=%s line=%d errno=%d errmsg=toke_auth_failed", __FILE__, __LINE__, ret);
@@ -358,92 +359,9 @@ int SrsRtmpConn::service_cycle()
     }
 }
 
-int SrsRtmpConn::get_client_info(int type)
-{
-    int ret = ERROR_SUCCESS;
-    if (req->stream == "")
-    {
-        return ERROR_USER_ARGS;
-    }
-    string demi1 = "&";
-    string demi2 = "=";
-    string source_str = req->stream;
-    bool is_first = true;
-    string::size_type pos = 0;
-    while (1)
-    {
-        if ((pos = source_str.find(demi1, 0)) == string::npos)
-        {
-            if (is_first)
-            {
-                ret = ERROR_USER_ARGS;
-                break;
-            }
-            pos = source_str.find(demi2, 0);
-            if (pos == string::npos)
-            {
-                ret = ERROR_USER_ARGS;
-                break;
-            }
-            string key = source_str.substr(0, pos);
-            string value = source_str.substr(pos + 1);
-            if (key == "userId")
-            {
-                req->client_info->user_id = atoll(value.c_str());
-            }
-            else if (key == "groupId")
-            {
-                req->client_info->group_id = atoll(value.c_str());
-            }
-            break;
-        }
-        if (is_first)
-        {
-            source_str = source_str.substr(pos + 1);
-            is_first = false;
-            continue;
-        }
-        string item = source_str.substr(0, pos);
-        source_str = source_str.substr(pos + 1);
-        pos = item.find(demi2, 0);
-        if (pos == string::npos)
-        {
-            ret = ERROR_USER_ARGS;
-            break;
-        }
-        string key = item.substr(0, pos);
-        string value = item.substr(pos + 1);
-        if (key == "userId")
-        {
-            req->client_info->user_id = atoll(value.c_str());
-        }
-        else if (key == "groupId")
-        {
-            req->client_info->group_id = atoll(value.c_str());
-        }
-    }
-    if (ret == ERROR_SUCCESS)
-    {
-        if (is_edge)
-        {
-            req->client_info->user_role = E_Edge;
-        }
-        else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
-        {
-            req->client_info->user_role = E_Publisher;
-        }
-        else
-        {
-            req->client_info->user_role = E_Player;
-        }
-        req->client_info->conn_id = SrsIdAlloc::generate_conn_id();
-    }
-    return ret;
-}
-
 void SrsRtmpConn::stream_bytes_stat()
 {
-    if (is_edge)
+    if (req->client_info->user_role != E_Player && req->client_info->user_role != E_Publisher)
     {
         return;
     }
@@ -477,17 +395,16 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
-    if (is_edge)
+    if (req->client_info->user_role != E_RUnknown)
     {
-        req->client_info->user_role = E_Edge;
-    }
-    else if (type == SrsRtmpConnPlay)
-    {
-        req->client_info->user_role = E_Player;
-    }
-    else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
-    {
-        req->client_info->user_role = E_Publisher;
+        if (type == SrsRtmpConnPlay)
+        {
+            req->client_info->user_role = E_Player;
+        }
+        else if (type == SrsRtmpConnFlashPublish || type == SrsRtmpConnFMLEPublish)
+        {
+            req->client_info->user_role = E_Publisher;
+        }
     }
     /*if ((ret = get_client_info(type)) != ERROR_SUCCESS)
       {
@@ -964,17 +881,30 @@ int SrsRtmpConn::flash_publishing(SrsSource* source)
         return ret;
     }
 
-    //start the heartbeat thread
-    hb_timer = new SrsConnHeartbeat(req, ip);
-    if (hb_timer->start() != ERROR_SUCCESS) {
-        // TODO: write log
+    if (req->client_info->user_role != E_Forward) {
+        //start the heartbeat thread
+        hb_timer = new SrsConnHeartbeat(req, ip);
+        if (hb_timer->start() != ERROR_SUCCESS) {
+            // TODO: write log
+        }
+
+        //start the ping request sender to client
+        ping = new SrsPing(rtmp);
+        if (ping->start() != ERROR_SUCCESS) {
+            // TODO: write log
+        }
     }
 
     srs_info("flash start to publish stream %s success", req->stream.c_str());
     ret = do_flash_publishing(source);
 
-    //end the heartbeat thread
-    srs_freep(hb_timer);
+    if (req->client_info->user_role != E_Forward) {
+        //end the heartbeat thread
+        srs_freep(hb_timer);
+
+        //end the ping request sender to client
+        srs_freep(ping);
+    }
 
     // when edge, notice edge to change state.
     // when origin, notice all service to unpublish.
@@ -1050,12 +980,32 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
            }
            */
 
-        if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
+        if (msg->header.is_user_control_message()) {
+            SrsPacket* pkt = NULL;
+            if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
+                srs_error("flash decode ping response failed. ret=%d", ret);
+                // TODO: write log
+                break;
+            }
+
+            SrsAutoFree(SrsPacket, pkt);
+
+            if (dynamic_cast<SrsPingResponsePacket*>(pkt)) {
+                SrsPingResponsePacket* ping_response = dynamic_cast<SrsPingResponsePacket*>(pkt);
+
+                int timestamp = ping_response->get_timestamp();
+                ping->set_last_response_time(timestamp);
+
+                srs_trace("get ping response success, last response time=%d", timestamp);
+                continue;
+            }
+
+        } else if (msg->header.is_amf0_command() || msg->header.is_amf3_command()) {
             // process UnPublish or pausePublish event.
             SrsPacket* pkt = NULL;
             if ((ret = rtmp->decode_message(msg, &pkt)) != ERROR_SUCCESS) {
-                srs_error("flash decode unpublish message failed. ret=%d", ret);
-                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=decode_unpublish_failed", __FILE__, __LINE__, ret);
+                srs_error("flash decode pause/resume/unpublish message failed. ret=%d", ret);
+                _tb_log->conn_log(TbLogLevel::Error, LOGTYPE_STREAM_STABILITY, req, "file=%s line=%d errno=%d errmsg=decode_pause/resume/unpublish_failed", __FILE__, __LINE__, ret);
                 break;
             }
 
@@ -1063,6 +1013,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
 
             if (dynamic_cast<SrsTbPausePublishPacket*>(pkt)) {
                 SrsTbPausePublishPacket* pause_publish = dynamic_cast<SrsTbPausePublishPacket*>(pkt);
+                srs_trace("pause publish.");
                 tb_debug("pause_publish msgtype = %d", pause_publish->get_message_type());
                 if (stat_timer != NULL)
                 {
@@ -1074,6 +1025,7 @@ int SrsRtmpConn::do_flash_publishing(SrsSource* source)
                 continue;
             } else if (dynamic_cast<SrsTbResumePublishPacket*>(pkt)) {
                 SrsTbResumePublishPacket* resume_publish = dynamic_cast<SrsTbResumePublishPacket*>(pkt);
+                srs_trace("resume publish.");
                 tb_debug("pause_publish msgtype = %d", resume_publish->get_message_type());
                 if (stat_timer != NULL)
                 {
@@ -1341,6 +1293,11 @@ int SrsRtmpConn::http_hooks_on_connect()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_connect 
         SrsConfDirective* on_connect = _srs_config->get_vhost_on_connect(req->vhost);
@@ -1368,6 +1325,10 @@ int SrsRtmpConn::http_hooks_on_connect()
 void SrsRtmpConn::http_hooks_on_close()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
     /*
        if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
     // whatever the ret code, notify the api hooks.
@@ -1391,6 +1352,11 @@ void SrsRtmpConn::http_hooks_on_close()
 void SrsRtmpConn::http_hooks_on_errorclose()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_close
@@ -1415,6 +1381,11 @@ int SrsRtmpConn::http_hooks_on_publish()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_publish 
         SrsConfDirective* on_publish = _srs_config->get_vhost_on_publish(req->vhost);
@@ -1443,6 +1414,11 @@ int SrsRtmpConn::http_hooks_on_publish()
 void SrsRtmpConn::http_hooks_on_unpublish()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish 
@@ -1465,6 +1441,11 @@ void SrsRtmpConn::http_hooks_on_unpublish()
 void SrsRtmpConn::http_hooks_on_publish_pause()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish
@@ -1487,6 +1468,11 @@ void SrsRtmpConn::http_hooks_on_publish_pause()
 void SrsRtmpConn::http_hooks_on_publish_resume()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_unpublish
@@ -1511,6 +1497,11 @@ int SrsRtmpConn::http_hooks_on_play()
     int ret = ERROR_SUCCESS;
 
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return ret;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // HTTP: on_play 
         SrsConfDirective* on_play = _srs_config->get_vhost_on_play(req->vhost);
@@ -1537,6 +1528,11 @@ int SrsRtmpConn::http_hooks_on_play()
 void SrsRtmpConn::http_hooks_on_stop()
 {
 #ifdef SRS_AUTO_HTTP_CALLBACK
+    if (req->client_info->user_role == E_Forward) {
+        srs_trace("forward connect recognized, do not send http callback.");
+        return;
+    }
+
     if (_srs_config->get_vhost_http_hooks_enabled(req->vhost)) {
         // whatever the ret code, notify the api hooks.
         // HTTP: on_stop 

@@ -35,7 +35,6 @@
 #include <srs_app_reload.hpp>
 
 #include <string>
-using namespace std;
 
 const int64_t MIN_STREAM_BYTES = 1000;
 
@@ -55,6 +54,7 @@ class SrsKbps;
 class SrsRtmpClient;
 class SrsSharedPtrMessage;
 class SrsConnHeartbeat;
+class SrsPing;
 
 /**
  * the client provides the main logic control for RTMP clients.
@@ -71,11 +71,11 @@ class SrsRtmpConn : public virtual SrsConnection, public virtual ISrsReloadHandl
     // for live play duration, for instance, rtmpdump to record.
     // @see https://github.com/winlinvip/simple-rtmp-server/issues/47
     int64_t duration;
-    bool is_edge;
     int timer_id;
     SrsKbps* kbps;
     SrsTimer* stat_timer;
     SrsConnHeartbeat* hb_timer;
+    SrsPing* ping;
 public:
     SrsRtmpConn(SrsServer* srs_server, st_netfd_t client_stfd);
     virtual ~SrsRtmpConn();
@@ -95,8 +95,6 @@ public:
     virtual int64_t get_send_bytes_delta();
     virtual int64_t get_recv_bytes_delta();
 private:
-    //store client info
-    virtual int get_client_info(int type);
     // when valid and connected to vhost/app, service the client.
     virtual int service_cycle();
     // stream(play/publish) service cycle, identify client first.

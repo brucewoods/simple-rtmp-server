@@ -63,6 +63,7 @@ enum e_user_role
     E_Player = 2,
     E_PublisherAI = 3,
     E_Edge = 4,
+    E_Forward = 5,
 };
 
 enum e_net_type
@@ -78,18 +79,21 @@ const std::string DEFAULT_VERSION = "0.0.0";
 
 class SrsClientInfo
 {
-    public:
-        int client_type;
-        std::string client_version;
-        std::string publish_token;
-        int user_role;
-        int net_type;
-        int64_t conn_id;
-        int64_t user_id;
-        int64_t group_id;
-    public:
-        SrsClientInfo();
-        ~SrsClientInfo();
+public:
+    int client_type;
+    std::string client_version;
+    std::string publish_token;
+    int user_role;
+    int net_type;
+    int64_t conn_id;
+    int64_t user_id;
+    int64_t group_id;
+public:
+    SrsClientInfo();
+    ~SrsClientInfo();
+public:
+    //deep copy
+    SrsClientInfo* copy();
 };
 
 /**
@@ -453,6 +457,10 @@ class SrsRtmpServer
          * reject the connect app request.
          */
         virtual void response_connect_reject(SrsRequest* req, const char* desc);
+        /**
+         * send the ping request to client.
+         */
+        virtual int send_ping_request(int timestamp);
         /**
          * response client the onBWDone message.
          */

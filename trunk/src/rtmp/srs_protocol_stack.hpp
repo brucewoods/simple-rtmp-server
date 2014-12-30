@@ -1591,6 +1591,9 @@ enum SrcPCUCEventType
  * +------------------------------+-------------------------
  * Figure 5 Pay load for the ‘User Control Message’.
  */
+class SrsPingRequestPacket;
+class SrsPingResponsePacket;
+
 class SrsUserControlPacket : public SrsPacket
 {
     public:
@@ -1617,23 +1620,27 @@ class SrsUserControlPacket : public SrsPacket
     protected:
         virtual int get_size();
         virtual int encode_packet(SrsStream* stream);
+public:
+    SrsPingRequestPacket* to_ping_request();
+    SrsPingResponsePacket* to_ping_response();
 };
-/*
+
 class SrsPingRequestPacket : public SrsUserControlPacket {
 public:
-    SrsPingRequestPacket(int timestamp);
+    SrsPingRequestPacket(int timestamp = 0);
     virtual ~SrsPingRequestPacket();
-protected:
-    virtual int encode_packet(SrsStream* stream);
+public:
+    int get_timestamp();
 };
+
 
 class SrsPingResponsePacket : public SrsUserControlPacket {
 public:
-    SrsPingResponsePacket(int timestamp);
+    SrsPingResponsePacket(int timestamp = 0);
     virtual ~SrsPingResponsePacket();
-protected:
-    virtual int encode_packet(SrsStream* stream);
+public:
+    int get_timestamp();
 };
-*/
+
 #endif
 

@@ -87,6 +87,21 @@ SrsClientInfo::~SrsClientInfo()
 {
 }
 
+SrsClientInfo *SrsClientInfo::copy() {
+    SrsClientInfo* cp = new SrsClientInfo();
+
+    cp->client_type = client_type;
+    cp->client_version = client_version;
+    cp->publish_token = publish_token;
+    cp->user_role = user_role;
+    cp->net_type = net_type;
+    cp->conn_id = conn_id;
+    cp->user_id = user_id;
+    cp->group_id = group_id;
+
+    return cp;
+}
+
 SrsRequest::SrsRequest()
 {
     objectEncoding = RTMP_SIG_AMF0_VER;
@@ -131,7 +146,9 @@ SrsRequest* SrsRequest::copy()
     cp->tcUrl = tcUrl;
     cp->vhost = vhost;
     cp->duration = duration;
-    cp->client_info = client_info;
+    if (client_info) {
+        cp->client_info = client_info->copy();
+    }
     if (args) {
         cp->args = args->copy()->to_object();
     }
@@ -894,7 +911,14 @@ int SrsRtmpServer::connect_app(SrsRequest* req)
         srs_freep(req->args);
         req->args = pkt->args->copy()->to_object();
         srs_info("copy edge traverse to origin auth args.");
+        if ((prop = req->args->ensure_property_string("srs_role")) != NULL) {
+            string srs_role = prop->to_str();
+            if (srs_role == RTMP_SIG_SRS_ROLE_FWD) {
+                req->client_info->user_role = E_Forward;
+            }
+        }
     }
+
 
     srs_info("get connect app message params success.");
 
@@ -1000,6 +1024,20 @@ void SrsRtmpServer::response_connect_reject(SrsRequest* /*req*/, const char* des
     srs_info("send connect app response rejected message success.");
 
     return;
+}
+
+int SrsRtmpServer::send_ping_request(int timestamp) {
+    int ret = ERROR_SUCCESS;
+
+    SrsPingRequestPacket* pkt = new SrsPingRequestPacket(timestamp);
+
+    if ((ret = send_and_free_packet(pkt, 0)) != ERROR_SUCCESS) {
+        srs_error("send ping response failed. ret=%d", ret);
+        return ret;
+    }
+    srs_verbose("send ping response success.");
+
+    return ret;
 }
 
 int SrsRtmpServer::on_bw_done()
