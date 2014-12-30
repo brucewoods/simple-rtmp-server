@@ -402,8 +402,8 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     snprintf(const_cast<char*>(cur_time.c_str()), TB_LOG_MAX_SIZE, 
             "%d%02d%02d%02d%02d", 
             1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
-    strLogFile += "_";
-    strLogFile += cur_time;
+    strLogFile.append(".");
+    strLogFile.append(cur_time);
     if (cur_time != log_file_time)
     {
         if (fd > 0)
