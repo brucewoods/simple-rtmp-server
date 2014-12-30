@@ -95,9 +95,9 @@ SrsTbLog::SrsTbLog()
     struct tm* tm;
     tm = localtime(&tv.tv_sec);
     snprintf(const_cast<char*>(log_file_time.c_str()), TB_LOG_MAX_SIZE, 
-               "%d%02d%02d%02d%02d", 
-               1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
-    
+            "%d%02d%02d%02d%02d", 
+            1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
+
 }
 
 SrsTbLog::~SrsTbLog()
@@ -400,71 +400,48 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     tm = localtime(&tv.tv_sec);
     string cur_time;
     snprintf(const_cast<char*>(cur_time.c_str()), TB_LOG_MAX_SIZE, 
-               "%d%02d%02d%02d%02d", 
-               1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
+            "%d%02d%02d%02d%02d", 
+            1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
+    strLogFile += "_";
     strLogFile += cur_time;
-    if (cur_time == log_file_time)
-    { 
-        if (level < TbLogLevel::Warn)
+    if (cur_time != log_file_time)
+    {
+        if (fd > 0)
         {
-            if (fd < 0)
-            {
-                open_log_file(strLogFile);
-            }
-            if (fd > 0)
-            {
-                ::write(fd, str_log, size); 
-            }
+            ::close(fd);
+            fd = -1;
         }
-        else
+        if (wf_fd > 0)
         {
-            if (wf_fd < 0)
-            {
-                open_log_file(strLogFile);
-            }
-            if (wf_fd > 0)
-            {
-                ::write(wf_fd, str_log, size); 
-            }
+            ::close(wf_fd);
+            wf_fd = -1;
         }
-        
+        log_file_time = cur_time;
+    }
+
+    if (level < TbLogLevel::Warn)
+    {
+        if (fd < 0)
+        {
+            open_log_file(strLogFile);
+        }
+        if (fd > 0)
+        {
+            ::write(fd, str_log, size); 
+        }
     }
     else
     {
-        if (level < TbLogLevel::Warn)
+        if (wf_fd < 0)
         {
-            if (fd > 0)
-            {
-                ::close(fd);
-                open_log_file(strLogFile);
-            }
-            else if (fd < 0)
-            {
-                open_log_file(strLogFile);
-            }
-            if (fd > 0)
-            {
-                ::write(fd, str_log, size); 
-            }
+            open_log_file(strLogFile);
         }
-        else
+        if (wf_fd > 0)
         {
-            if (wf_fd > 0)
-            {
-                ::close(wf_fd);
-                open_log_file(strLogFile);
-            }
-            else if (wf_fd < 0)
-            {
-                open_log_file(strLogFile);
-            }
-            if (wf_fd > 0)
-            {
-                ::write(wf_fd, str_log, size); 
-            }
+            ::write(wf_fd, str_log, size); 
         }
     }
-    
+
     memset(log_data, 0, TB_LOG_MAX_SIZE);
 }
 
