@@ -46,7 +46,12 @@ SrsSharedPtrMessageArray::~SrsSharedPtrMessageArray()
         srs_freep(msg);
     }
     
-    srs_freep(msgs);
+    //srs_freep(msgs);
+    if (msgs)
+    {
+        delete []msgs;
+        msgs = NULL;
+    }
 }
 
 

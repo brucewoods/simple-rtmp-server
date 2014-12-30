@@ -103,7 +103,7 @@ class SrsTbLog : public ITbLog
     private:
         virtual bool generate_header(const char* level_name, int* header_size);
         virtual void write_log(char* str_log, int size, int level);
-        virtual void open_log_file(std::string strFileName);
+        virtual void open_log_file(std::string strFileName, bool if_exc);
 };
 
 #endif

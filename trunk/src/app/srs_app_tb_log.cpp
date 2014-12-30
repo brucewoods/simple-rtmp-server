@@ -402,8 +402,8 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     snprintf(const_cast<char*>(cur_time.c_str()), TB_LOG_MAX_SIZE, 
             "%d%02d%02d%02d%02d", 
             1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
-    strLogFile += "_";
-    strLogFile += cur_time;
+    strLogFile.append(".");
+    strLogFile.append(cur_time.c_str());
     if (cur_time != log_file_time)
     {
         if (fd > 0)
@@ -423,41 +423,54 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     {
         if (fd < 0)
         {
-            open_log_file(strLogFile);
+            open_log_file(strLogFile, false);
         }
         if (fd > 0)
         {
-            ::write(fd, str_log, size); 
+            ::write(fd, str_log, size);
         }
     }
     else
     {
         if (wf_fd < 0)
         {
-            open_log_file(strLogFile);
+            open_log_file(strLogFile, true);
         }
         if (wf_fd > 0)
         {
-            ::write(wf_fd, str_log, size); 
+            ::write(wf_fd, str_log, size);
         }
     }
 
     memset(log_data, 0, TB_LOG_MAX_SIZE);
 }
 
-void SrsTbLog::open_log_file(std::string strLogName)
+void SrsTbLog::open_log_file(std::string strLogName, bool if_exc)
 {
     if (strLogName.empty()) {
         return;
     }
+    if (!if_exc)
+    {
+        fd = ::open(strLogName.c_str(), O_RDWR | O_APPEND);
 
-    fd = ::open(strLogName.c_str(), O_RDWR | O_APPEND);
+        if(fd == -1 && errno == ENOENT) {
+            fd = open(strLogName.c_str(),
+                 O_RDWR | O_CREAT | O_TRUNC,
+                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
+            );
+        }
+    }
+    else
+    {
+        wf_fd = ::open(strLogName.c_str(), O_RDWR | O_APPEND);
 
-    if(fd == -1 && errno == ENOENT) {
-        fd = open(strLogName.c_str(), 
-                O_RDWR | O_CREAT | O_TRUNC, 
-                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
-                );
+        if(wf_fd == -1 && errno == ENOENT) {
+            wf_fd = open(strLogName.c_str(),
+                 O_RDWR | O_CREAT | O_TRUNC,
+                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
+            );
+        }
     }
 }
 

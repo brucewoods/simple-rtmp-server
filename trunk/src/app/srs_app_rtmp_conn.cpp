@@ -395,7 +395,7 @@ int SrsRtmpConn::stream_service_cycle()
         return ret;
     }
     req->strip();
-    if (req->client_info->user_role != E_RUnknown)
+    if (req->client_info->user_role == E_RUnknown)
     {
         if (type == SrsRtmpConnPlay)
         {
