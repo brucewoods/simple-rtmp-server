@@ -398,7 +398,7 @@ void SrsTbLog::write_log(char *str_log, int size, int level)
     // to calendar time
     struct tm* tm;
     tm = localtime(&tv.tv_sec);
-    char* cur_time;
+    char cur_time[13];
     snprintf(cur_time, TB_LOG_MAX_SIZE, 
             "%d%02d%02d%02d%02d", 
             1900 + tm->tm_year, 1 + tm->tm_mon, tm->tm_mday, tm->tm_hour, 0);
