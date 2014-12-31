@@ -87,6 +87,7 @@ class SrsTbLog : public ITbLog
         int wf_fd;
         // whether log to file tank
         bool log_to_file_tank;
+        std::string log_file_time;
     public:
         SrsTbLog();
         virtual ~SrsTbLog();
@@ -102,8 +103,7 @@ class SrsTbLog : public ITbLog
     private:
         virtual bool generate_header(const char* level_name, int* header_size);
         virtual void write_log(char* str_log, int size, int level);
-        virtual void open_log_file();
-        virtual void open_wf_log_file();
+        virtual void open_log_file(std::string strFileName, bool if_exc);
 };
 
 #endif

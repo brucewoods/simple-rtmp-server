@@ -124,6 +124,7 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
     }
     if (ret != ERROR_SUCCESS) {
         srs_error("parse http post response failed. ret=%d", ret);
+        srs_freep(msg);
         return ret;
     }
 
@@ -135,7 +136,7 @@ int SrsHttpClient::post(SrsHttpUri* uri, string req, string& res)
         res = msg->body();
     }
     srs_info("parse http post response success.");
-    
+    srs_freep(msg);
     return ret;
 }
 
